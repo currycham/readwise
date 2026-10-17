@@ -1,7 +1,8 @@
 // 把书页 JSON 渲染成单个 HTML 文件。数据以 JSON 嵌入，页面脚本负责渲染。
 import { readFile } from 'node:fs/promises';
+import { rootPath } from '../engine/paths.mjs';
 
-const TEMPLATE = new URL('./template.html', import.meta.url);
+const TEMPLATE = rootPath('renderer', 'template.html');
 
 export async function renderPage(page, { slug, apiBase = '' } = {}) {
   const tpl = await readFile(TEMPLATE, 'utf8');

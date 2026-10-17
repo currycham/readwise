@@ -1,8 +1,11 @@
 // 联网检索：为一本书收集元数据和有实质内容的解读，结果缓存在 out/cache，避免对比测试时重复花钱。
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { SEARCH } from '../config/models.mjs';
+import { dataPath } from './paths.mjs';
+import { record } from './llm.mjs';
 
-const CACHE = new URL('../out/cache/', import.meta.url);
+const CACHE = dataPath('cache');
 
 export function slugify(s) {
   return s.replace(/[《》\s/\\?:*"<>|]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'book';
@@ -16,12 +19,13 @@ function queries(title, author) {
     `${t} 读书笔记 要点 总结`,
     `${t} 各章 内容 概要`,
     `${t} 书评 解读 作者观点`,
+    `《${title}》 豆瓣 评分 评价人数`,
   ];
 }
 
 export async function searchBook(title, author = '') {
   const key = slugify(`${title}-${author}`);
-  const file = new URL(`${key}.json`, CACHE);
+  const file = join(CACHE, `${key}.json`);
   try { return JSON.parse(await readFile(file, 'utf8')); } catch {}
 
   let results = [];
@@ -39,6 +43,7 @@ export async function searchBook(title, author = '') {
         results.push({ query: q, title: p.name, url: p.url, site: p.siteName || '', text: (p.summary || p.snippet || '').slice(0, 1500) });
       }
       cost += SEARCH.bocha.pricePerCall;
+      await record({ task: 'search', book: title, alias: 'bocha', model: 'bocha', ms: 0, cost: SEARCH.bocha.pricePerCall, inputTokens: 0, outputTokens: 0, cachedTokens: 0 });
     }
   } else {
     throw new Error(`未知搜索供应商：${SEARCH.provider}`);

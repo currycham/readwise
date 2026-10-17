@@ -1,5 +1,7 @@
 // 生成一本书的精读学习页：检索 → 打分 → 生成 → 结构校验 → 质检 → 修正 → 保存。
 import { mkdir, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import { dataPath } from './paths.mjs';
 import { EVIDENCE_THRESHOLD, ROLES } from '../config/models.mjs';
 import { chatJSON } from './llm.mjs';
 import * as P from './prompts.mjs';
@@ -110,6 +112,10 @@ export async function buildBookPage(o) {
   }
 
   page.schema_version = SCHEMA_VERSION;
+  const db = assessment.douban;
+  if (db && typeof db.rating === 'number' && db.rating > 0 && db.rating <= 10) {
+    page.book.douban = { rating: db.rating, count: Number.isInteger(db.count) ? db.count : null, via: 'search', at: new Date().toISOString().slice(0, 10) };
+  }
   page.meta = {
     generated_at: new Date().toISOString(),
     model: genModel,
@@ -122,10 +128,10 @@ export async function buildBookPage(o) {
 
   async function finish(result) {
     const out = { ...result, title: o.title, model: genModel, ms: Date.now() - t0, cost: steps.reduce((s, x) => s + (x.cost || 0), 0) };
-    const dir = new URL(`../out/books/${slugify(o.title)}/`, import.meta.url);
+    const dir = dataPath('books', slugify(o.title));
     await mkdir(dir, { recursive: true });
-    if (result.page) await writeFile(new URL(`${genModel}.json`, dir), JSON.stringify(result.page, null, 2));
-    await writeFile(new URL(`${genModel}.run.json`, dir), JSON.stringify({ ...out, page: undefined }, null, 2));
+    if (result.page) await writeFile(join(dir, `${genModel}.json`), JSON.stringify(result.page, null, 2));
+    await writeFile(join(dir, `${genModel}.run.json`), JSON.stringify({ ...out, page: undefined }, null, 2));
     log(`完成：${out.status}，用时 ${(out.ms / 1000).toFixed(0)} 秒，成本 ¥${out.cost.toFixed(3)}`);
     return out;
   }

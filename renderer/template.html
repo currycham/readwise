@@ -5,9 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title><!--TITLE--> 精读手册</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;800&family=Noto+Sans+SC:wght@400;500;700&family=IBM+Plex+Mono:wght@500&display=swap">
 <style>
 /* Layout: one reading column under a sticky timed-step bar. River-slate neutrals, teal for progress, amber for tension and overtime. */
 :root{
@@ -15,9 +12,9 @@
   --accent:#0D6866; --accent-ink:#FFFFFF; --accent-soft:#D3E8E5;
   --tension:#B26E15; --tension-soft:#F3E2C8;
   --ok:#2B7A4B; --ok-soft:#DBEEE1; --bad:#AF3A36; --bad-soft:#F5DDDA;
-  --f-display:"Noto Serif SC","Songti SC","STSong",serif;
-  --f-body:"Noto Sans SC","PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
-  --f-mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  --f-display:"Songti SC","STSong","Noto Serif CJK SC","Source Han Serif SC","SimSun",serif;
+  --f-body:"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC",system-ui,sans-serif;
+  --f-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
   --r:10px; color-scheme:light;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
@@ -177,6 +174,12 @@ textarea{width:100%;min-height:76px;border:1px solid var(--line);border-radius:8
 .askrow textarea{min-height:52px}
 
 footer{color:var(--muted);font-size:13px;display:flex;flex-direction:column;gap:6px}
+.sitebar{max-width:780px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;gap:12px;padding-top:12px;font-size:14px}
+.sitebar a{color:var(--muted);text-decoration:none}
+.sitebar a:hover{color:var(--ink)}
+.sitebar b{font-family:var(--f-display);font-size:18px;color:var(--ink);margin-right:14px}
+.db{font-family:var(--f-mono);font-size:13px;color:var(--ok)}
+.report{display:flex;flex-direction:column;gap:8px;max-width:520px}
 footer a{color:var(--muted)}
 
 @media (max-width:640px){
@@ -192,6 +195,7 @@ footer a{color:var(--muted)}
 <body>
 <script type="application/json" id="book-data"><!--BOOK_DATA--></script>
 
+<div class="sitebar" id="sitebar" hidden></div>
 <div class="bar">
   <div class="in">
     <nav aria-label="学习步骤"><ol id="nav"></ol></nav>
@@ -340,12 +344,19 @@ footer a{color:var(--muted)}
   </section>
 
   <footer id="footer"></footer>
+  <div class="report" id="report" hidden>
+    <div class="ctrl"><button class="btn sm" id="reportBtn">发现内容有误？告诉我们</button><span class="readout" id="reportState"></span></div>
+    <div id="reportBox" hidden><textarea id="reportText" aria-label="问题描述" placeholder="哪一块、哪句话有问题？正确的应该是什么？"></textarea>
+    <div class="ctrl" style="margin-top:6px"><button class="btn primary sm" id="reportSend">提交</button></div></div>
+  </div>
 </div>
 
 <script>
 (function(){
 const B=JSON.parse(document.getElementById('book-data').textContent);
-const SLUG=B.meta&&B.meta.slug||B.book.title;
+const SITE=B.site||null;
+const SLUG=SITE&&SITE.slug||B.meta&&B.meta.slug||B.book.title;
+const here=encodeURIComponent(location.pathname);
 const API=window.BOOK_API||'';
 const KEY='book-'+SLUG+'-v1';
 let S={};
@@ -361,7 +372,10 @@ const bk=B.book;
 document.title=bk.title+' 精读手册';
 $('#title').textContent=bk.title;
 $('#enTitle').textContent=[bk.original_title,bk.author_en].filter(Boolean).join(' · ')||'精读手册';
-$('#by').textContent=bk.author+' 著';
+$('#by').innerHTML=esc(bk.author)+' 著'+(bk.douban&&bk.douban.rating?`　<span class="db">豆瓣 ${Number(bk.douban.rating).toFixed(1)}${bk.douban.count?`（${Number(bk.douban.count).toLocaleString()} 人评价）`:''}</span>`:'')+(SITE&&SITE.first_by?`　<span style="font-size:13px">首位生成：${esc(SITE.first_by)}</span>`:'');
+if(SITE){const sb=$('#sitebar');sb.hidden=false;
+  sb.innerHTML=`<span><a href="/"><b>Readwise</b></a><a href="/library">书库</a></span><span>${SITE.viewer?`<a href="/me">${esc(SITE.viewer.nickname)}</a>`:`<a href="/login?next=${here}">登录 / 注册</a>`}</span>`;
+  $('#report').hidden=false}
 $('#cats').innerHTML=(bk.categories||[]).map(c=>`<span class="chip">${esc(c.top)} · ${esc(c.sub)}</span>`).join('');
 const R=B.recommend;
 $('#recOne').textContent=R.one_line;
@@ -475,21 +489,36 @@ $('#copy').onclick=async()=>{const t=sheet();try{await navigator.clipboard.write
 /* ---------- podcast ---------- */
 function showScript(p){
   const box=$('#podScript');box.hidden=false;
-  box.innerHTML=`<div class="label">${esc(p.title||'节目文稿')}</div>`+p.segments.map(s=>`<h4>${esc(s.heading||'')}</h4>`+s.lines.map(l=>`<p><b>${l.speaker==='A'?'领读':'提问'}</b>${esc(l.text)}</p>`).join('')).join('');
+  box.innerHTML=`<div class="label">节目文稿</div>`+p.segments.map(s=>`<h4>${esc(s.heading||'')}</h4>`+s.lines.map(l=>`<p><b>${l.speaker==='A'?'领读':'提问'}</b>${esc(l.text)}</p>`).join('')).join('');
 }
-if(B.podcast&&B.podcast.audio_url){const a=$('#podAudio');a.src=B.podcast.audio_url;a.hidden=false;$('#podBtn').hidden=true}
-if(B.podcast&&B.podcast.script){showScript(B.podcast.script);$('#podBtn').textContent='重新生成'}
+function showAudio(url,ms){const a=$('#podAudio');if(a.getAttribute('src')!==url)a.src=url;a.hidden=false;$('#podBtn').hidden=true;
+  $('#podState').textContent=ms?`约 ${Math.round(ms/60000)} 分钟 · 本节目由 AI 生成`:'本节目由 AI 生成'}
+let podTimer=null;
+function podStatus(j){
+  if(j.script&&j.script.segments)showScript(j.script);
+  if(j.url){showAudio(j.url,j.ms);clearTimeout(podTimer);return}
+  if(j.status==='queued'||j.status==='running'){
+    $('#podBtn').disabled=true;$('#podState').innerHTML=`<span>正在生成播客：${esc(j.progress||'排队中')}。大约需要 5 分钟，生成好后所有人都能收听。</span>`;
+    clearTimeout(podTimer);podTimer=setTimeout(pollPod,5000);return}
+  if(j.status==='failed'){$('#podBtn').disabled=false;$('#podBtn').textContent='重新生成';$('#podState').textContent='上次生成失败了，可以再试一次。';return}
+  if(j.chars&&!j.status){$('#podState').textContent=`文稿约 ${j.chars} 字。`}
+}
+async function pollPod(){try{const r=await fetch(API+'/api/podcast?slug='+encodeURIComponent(SLUG));podStatus(await r.json())}catch(e){podTimer=setTimeout(pollPod,8000)}}
+if(SITE&&SITE.podcast){
+  if(SITE.podcast.status==='ready'){showAudio(SITE.podcast.url,SITE.podcast.ms);if(B.podcast&&B.podcast.script)showScript(B.podcast.script)}
+  else if(SITE.podcast.status==='queued'||SITE.podcast.status==='running'){pollPod()}
+  else{$('#podBtn').textContent=SITE.podcast.status==='failed'?'重新生成':'生成并收听';$('#podInfo').textContent='这本书还没有播客。点一下生成（约 5 分钟），生成好后所有人都能收听。'}
+}else if(B.podcast&&B.podcast.script){showScript(B.podcast.script);$('#podBtn').textContent='重新生成'}
 $('#podBtn').onclick=async()=>{
-  if(!API&&location.protocol==='file:'){$('#podState').textContent='播客需要在服务端生成，请用 npm run dev 打开本页。';return}
-  $('#podBtn').disabled=true;$('#podState').textContent='正在生成节目文稿，约 1–3 分钟…';
+  if(!API&&location.protocol==='file:'){$('#podState').textContent='播客需要在服务端生成，请通过网站打开本页。';return}
+  $('#podBtn').disabled=true;$('#podState').textContent='正在提交…';
   try{
     const r=await fetch(API+'/api/podcast',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({slug:SLUG})});
-    const j=await r.json();if(!r.ok)throw new Error(j.error||r.status);
-    showScript(j.script);
-    if(j.audio_url){const a=$('#podAudio');a.src=j.audio_url;a.hidden=false}
-    $('#podState').textContent=j.audio_url?'':`文稿约 ${j.chars} 字。语音合成接入后会在这里直接播放。`;
-  }catch(err){$('#podState').textContent='生成失败：'+err.message}
-  $('#podBtn').disabled=false;
+    const j=await r.json();
+    if(r.status===401){$('#podState').innerHTML=`${esc(j.error)} <a href="/login?next=${here}">去登录</a>`;$('#podBtn').disabled=false;return}
+    if(!r.ok)throw new Error(j.error||r.status);
+    podStatus(j);
+  }catch(err){$('#podState').textContent='生成失败：'+err.message;$('#podBtn').disabled=false}
 };
 
 /* ---------- ask the author ---------- */
@@ -512,9 +541,14 @@ async function send(text){
   const el=$('#msgs').lastElementChild;
   try{
     const r=await fetch(API+'/api/ask',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({slug:SLUG,messages:S.chat.slice(0,-1).slice(-20)})});
-    if(!r.ok){const j=await r.json().catch(()=>({}));throw new Error(j.error||('服务返回 '+r.status))}
+    if(!r.ok){const j=await r.json().catch(()=>({}));
+      if(r.status===401){S.chat.splice(-2,2);renderChat();$('#askState').innerHTML=`${esc(j.error||'请先登录')} <a href="/login?next=${here}">去登录</a>`;busy=false;$('#askSend').disabled=false;$('#askInput').value=text;return}
+      if(r.status===402){S.chat.splice(-2,2);renderChat();$('#askState').innerHTML=`${esc(j.error)} <a href="/pricing">查看价格</a>`;busy=false;$('#askSend').disabled=false;$('#askInput').value=text;return}
+      throw new Error(j.error||('服务返回 '+r.status))}
     const rd=r.body.getReader(),dec=new TextDecoder();let acc='';
-    for(;;){const {done,value}=await rd.read();if(done)break;acc+=dec.decode(value,{stream:true});el.textContent=acc;S.chat[S.chat.length-1].content=acc}
+    for(;;){const {done,value}=await rd.read();if(done)break;acc+=dec.decode(value,{stream:true});el.textContent=acc.replace(/\n?\[\[(BLOCKED|ERROR)\]\]/,'');S.chat[S.chat.length-1].content=el.textContent}
+    if(/\[\[BLOCKED\]\]/.test(acc)){S.chat.pop();el.classList.add('err');el.textContent='这条回答没有通过内容审核，换个问法试试。'}
+    else if(/\[\[ERROR\]\]/.test(acc)){S.chat.pop();el.classList.add('err');el.textContent='回答中断了，这次提问没有扣次数，请再试一次。'}
     save();
   }catch(err){S.chat.pop();el.classList.add('err');el.textContent='没有得到回答：'+err.message}
   busy=false;$('#askSend').disabled=false;
@@ -527,6 +561,15 @@ $('#footer').innerHTML=`<p>本页内容由 AI 基于公开资料${B.meta&&B.meta
   (B.sources&&B.sources.length?`<p>参考来源：${B.sources.map(s=>`<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title)}</a>`).join('、')}</p>`:'')+
   `<p>你写下的内容和用时只保存在当前浏览器里。</p>`;
 
+if(SITE&&SITE.first_by)$('#footer').insertAdjacentHTML('beforeend',`<p>本书的回顾由 <b>${esc(SITE.first_by)}</b> 首次生成。</p>`);
+$('#reportBtn').onclick=()=>{$('#reportBox').hidden=!$('#reportBox').hidden};
+$('#reportSend').onclick=async()=>{
+  const t=$('#reportText').value.trim();if(!t)return;
+  const r=await fetch(API+'/api/report',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({slug:SLUG,content:t})});
+  const j=await r.json().catch(()=>({}));
+  if(r.status===401){$('#reportState').innerHTML=`${esc(j.error)} <a href="/login?next=${here}">去登录</a>`;return}
+  $('#reportState').textContent=r.ok?'已收到，谢谢你帮我们改进。':(j.error||'提交失败');if(r.ok){$('#reportText').value='';$('#reportBox').hidden=true}
+};
 renderNav();renderQuiz();renderStance();sheet();tick();
 })();
 </script>

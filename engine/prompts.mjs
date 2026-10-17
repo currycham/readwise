@@ -26,8 +26,11 @@ B. 你自己对这本书的了解
   "my_structure": ["全书主要部分"],
   "conflicts": ["资料与你的记忆冲突之处"],
   "scores": {"identity": 0, "corroborated": 0, "familiarity": 0},
+  "douban": {"rating": null, "count": null, "source": null},
   "reason": "一两句话说明判断依据"
-}`;
+}
+
+douban：只有当检索资料里明确写出这本书（同一本书，任一中文版本）的豆瓣评分时才填写，rating 是 0–10 的数字，count 是评价人数（没有就 null），source 是资料编号。资料里没有就全部为 null，不要凭记忆填写。`;
 
 export function assessUser({ title, author, evidence }) {
   return `书名：《${title}》${author ? `\n作者：${author}` : ''}
@@ -177,7 +180,8 @@ export const PODCAST_SYSTEM = `你是一档读书播客的编剧。节目由两�
 - 主持人 B（提问者）：代表没读过这本书的听众，追问、举自己的例子、提出质疑、做小结。
 
 要求：
-- 目标时长约 {minutes} 分钟，中文口播约每分钟 300 字，全稿约 {chars} 字。
+- 目标时长约 {minutes} 分钟，中文口播约每分钟 300 字，全稿约 {chars} 字，不能明显少于这个字数。
+- 篇幅分配：开场约 400 字；每个知识块的对谈约 {perChunk} 字（至少 8 轮来回）；结尾约 400 字。
 - 开场第一句由 A 说明“本节目由 AI 生成”，然后用 30 秒说清这本书为什么值得听。
 - 按知识块的顺序推进，每个知识块一段，段与段之间自然过渡。每段至少一个具体例子，B 至少追问一次。
 - 结尾 B 用三句话总结全书，A 留一个让听众带走的问题。

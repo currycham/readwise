@@ -11,7 +11,7 @@ export async function podcastScript(page, { minutes = 30, alias = ROLES.podcast 
     book: page.book.title,
     temperature: 0.8,
     messages: [
-      { role: 'system', content: PODCAST_SYSTEM.replace('{minutes}', minutes).replace('{chars}', chars) },
+      { role: 'system', content: PODCAST_SYSTEM.replace('{minutes}', minutes).replace('{chars}', chars).replace('{perChunk}', Math.round((chars - 800) / page.chunks.length)) },
       { role: 'user', content: podcastUser(page) },
     ],
   });
@@ -21,10 +21,4 @@ export async function podcastScript(page, { minutes = 30, alias = ROLES.podcast 
   return { script, chars: total, estMinutes: Math.round(total / 300), cost: r.cost, ms: r.ms, model: r.model };
 }
 
-/**
- * 语音合成接口位：把 script 按行交给 TTS（A/B 两个音色），拼接成一个音频文件并上传到 COS。
- * 候选：火山引擎豆包语音播客模型，或阿里云百炼 MiniMax speech-2.8。拿到 API 文档后在这里实现。
- */
-export async function synthesize(_script) {
-  return null;
-}
+export { synthesizePodcast } from './tts.mjs';

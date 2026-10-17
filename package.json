@@ -3,8 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Readwise：书籍精读学习页内容引擎：检索打分、生成、质检、渲染、问作者、播客稿",
-  "engines": { "node": ">=20" },
+  "description": "Readwise：书籍精读回顾网站与内容引擎：检索打分、生成、质检、渲染、问作者、双人播客",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "generate": "node --env-file-if-exists=.env scripts/generate.mjs",
     "compare": "node --env-file-if-exists=.env scripts/compare.mjs",
@@ -13,6 +15,20 @@
     "check": "node scripts/check.mjs",
     "ping": "node --env-file-if-exists=.env scripts/ping.mjs",
     "recheck": "node --env-file-if-exists=.env scripts/recheck.mjs",
-    "dev": "node --env-file-if-exists=.env server/dev-server.mjs"
+    "podcast": "node --env-file-if-exists=.env scripts/podcast.mjs",
+    "dev": "node --env-file-if-exists=.env node_modules/next/dist/bin/next dev",
+    "build": "next build",
+    "start": "node --env-file-if-exists=.env node_modules/next/dist/bin/next start",
+    "worker": "node --env-file-if-exists=.env worker/worker.mjs",
+    "preview": "node --env-file-if-exists=.env server/dev-server.mjs"
+  },
+  "dependencies": {
+    "better-sqlite3": "12.4.1",
+    "next": "15.5.27",
+    "react": "19.1.1",
+    "react-dom": "19.1.1"
+  },
+  "overrides": {
+    "postcss": "8.5.28"
   }
 }

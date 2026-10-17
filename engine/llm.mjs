@@ -1,8 +1,10 @@
 // OpenAI 兼容的 chat/completions 客户端：流式读取、用量统计、按价格折算成本、写入成本账本。
 import { appendFile, mkdir } from 'node:fs/promises';
 import { MODELS, PROVIDERS } from '../config/models.mjs';
+import { currentContext, usageSink } from './context.mjs';
+import { DATA_DIR, dataPath } from './paths.mjs';
 
-const LEDGER = new URL('../out/ledger.jsonl', import.meta.url);
+const LEDGER = dataPath('ledger.jsonl');
 
 export function resolveModel(alias) {
   const m = MODELS[alias];
@@ -131,9 +133,11 @@ async function fetchStream(model, body, onDelta) {
   return { text, reasoning, usage, finish };
 }
 
-async function record(entry) {
-  await mkdir(new URL('../out/', import.meta.url), { recursive: true });
-  await appendFile(LEDGER, JSON.stringify({ at: new Date().toISOString(), ...entry }) + '\n');
+export async function record(entry) {
+  const full = { at: new Date().toISOString(), ...currentContext(), ...entry };
+  await mkdir(DATA_DIR, { recursive: true });
+  await appendFile(LEDGER, JSON.stringify(full) + '\n');
+  try { await usageSink()?.(full); } catch (e) { console.error('记账回调失败：', e.message); }
 }
 
 /** 从模型输出中取出 JSON 对象（容忍 ```json 围栏和前后多余文字）。 */

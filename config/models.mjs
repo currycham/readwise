@@ -96,3 +96,15 @@ export const SEARCH = {
 
 // 资料充分度门槛（0–9 分，见 engine/prompts.mjs 的打分规则）
 export const EVIDENCE_THRESHOLD = Number(env.EVIDENCE_THRESHOLD || 6);
+
+// 播客语音合成：腾讯云 TokenHub 上的 MiniMax 同步语音合成（单次 ≤ 1 万字符，中文每字按 2 个字符计费）
+export const TTS = {
+  url: (env.TOKENHUB_BASE_URL || 'https://tokenhub.tencentmaas.com/v1').replace(/\/$/, '') + '/wand/minimax-tts/sync_tts',
+  keyEnv: 'TOKENHUB_API_KEY',
+  model: env.TTS_MODEL || 'minimax-speech-2.8-turbo',
+  voiceA: env.TTS_VOICE_A || 'presenter_male',   // 领读人
+  voiceB: env.TTS_VOICE_B || 'presenter_female', // 提问者
+  speed: Number(env.TTS_SPEED || 1.05),
+  pricePer10k: Number(env.TTS_PRICE_PER_10K || 2), // 元 / 万计费字符，待按控制台核实
+  concurrency: Number(env.TTS_CONCURRENCY || 4),
+};

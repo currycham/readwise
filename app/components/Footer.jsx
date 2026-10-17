@@ -1,0 +1,11 @@
+export default function Footer() {
+  return (
+    <footer className="site-foot">
+      <div className="wrap">
+        <p>书籍回顾、播客和“问作者”的内容均由 AI 基于公开资料生成，可能存在错误，不能替代阅读原书。“问作者”为 AI 模拟，非作者本人观点。</p>
+        <p>所用模型：腾讯混元、DeepSeek（均已完成生成式人工智能服务备案）。{process.env.NEXT_PUBLIC_ICP ? `　${process.env.NEXT_PUBLIC_ICP}` : ''}</p>
+        <p>© {new Date().getFullYear()} Readwise</p>
+      </div>
+    </footer>
+  );
+}
