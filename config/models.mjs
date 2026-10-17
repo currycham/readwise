@@ -75,7 +75,7 @@ export const MODELS = {
 
 // 每个环节默认用哪个模型；命令行 --model 只覆盖 generate。
 export const ROLES = {
-  assess: env.ROLE_ASSESS || 'deepseek-flash',   // 检索结果打分
+  assess: env.ROLE_ASSESS || 'deepseek-flash',   // 未用：打分由生成模型完成（需要判断它是否了解这本书）
   extract: env.ROLE_EXTRACT || 'deepseek-flash', // 上传原文的分块抽取
   generate: env.ROLE_GENERATE || 'deepseek-pro', // 生成书页
   check: env.ROLE_CHECK || 'hy3',                // 质检

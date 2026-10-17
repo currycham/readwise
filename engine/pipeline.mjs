@@ -42,15 +42,17 @@ export async function buildBookPage(o) {
     steps.push({ name: 'search', cost: search.cost, results: search.results.length });
     notes = evidenceText(search);
     log(`检索到 ${search.results.length} 条资料，评估充分度…`);
+    // 用生成模型打分：要判断的是“这个模型是否了解这本书”，并用资料交叉验证
     const a = step('assess', await chatJSON({
-      alias: ROLES.assess, task: 'assess', book: o.title, maxTokens: 3000,
-      messages: [{ role: 'system', content: P.ASSESS_SYSTEM }, { role: 'user', content: P.assessUser({ title: o.title, author: o.author, evidence: notes, threshold: EVIDENCE_THRESHOLD }) }],
+      alias: genModel, task: 'assess', book: o.title, maxTokens: 12000,
+      messages: [{ role: 'system', content: P.ASSESS_SYSTEM }, { role: 'user', content: P.assessUser({ title: o.title, author: o.author, evidence: notes }) }],
     }));
     assessment = a.data;
     const s = assessment.scores || {};
-    const total = (s.core_concepts || 0) + (s.structure || 0) + (s.corroboration || 0);
-    assessment.total = total;
-    assessment.can_generate = !assessment.ambiguous && total >= EVIDENCE_THRESHOLD && (s.core_concepts || 0) >= 2;
+    const identity = s.identity || 0, corr = s.corroborated || 0, fam = s.familiarity || 0;
+    assessment.total = identity + corr + fam;
+    // 规则：身份确认 + 至少一个核心概念被资料印证 + 资料与模型认知合计足够 + 总分达标
+    assessment.can_generate = !assessment.ambiguous && identity >= 2 && corr >= 1 && corr + fam >= 4 && assessment.total >= EVIDENCE_THRESHOLD;
     if (!assessment.can_generate) {
       const status = assessment.ambiguous ? 'ambiguous' : 'insufficient';
       log(status === 'ambiguous' ? '书名对应多本书，需要用户确认。' : `资料不足（${total}/9），需要用户上传原文。`);
@@ -89,7 +91,7 @@ export async function buildBookPage(o) {
     const checkModel = o.checkModel || ROLES.check;
     log(`用 ${checkModel} 质检…`);
     const c = step('check', await chatJSON({
-      alias: checkModel, task: 'check', book: title, maxTokens: 6000,
+      alias: checkModel, task: 'check', book: title, maxTokens: 16000,
       messages: [{ role: 'system', content: P.CHECK_SYSTEM }, { role: 'user', content: P.checkUser({ page, notes }) }],
     }));
     check = c.data;

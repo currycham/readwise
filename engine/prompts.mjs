@@ -3,33 +3,34 @@ import { categoryListText } from '../config/categories.mjs';
 import { PAGE_SHAPE } from './schema.mjs';
 
 /* ---------- 1. 资料充分度打分 ---------- */
-export const ASSESS_SYSTEM = `你是一名严谨的图书编辑，负责判断：根据给定的检索资料，能否可靠地为一本书生成精读学习页面。
+export const ASSESS_SYSTEM = `你是一名严谨的图书编辑，负责判断：能否可靠地为一本书生成精读学习页面。依据有两类，需要交叉验证：
+A. 检索资料（网页摘要，可能很简短）
+B. 你自己对这本书的了解
 
-判断原则：
-- 只看证据。你自己对这本书的印象可以用来提出“待验证的要点”，但必须和检索资料互相印证才算数。
-- 同名书、不同译本、不同作者要分清楚。如果资料指向多本可能的书，标记 ambiguous 并列出候选。
-- 打分（每项 0–3 分，总分 0–9）：
-  - core_concepts：资料能否确认这本书的核心概念和主要观点（0 没有，1 零星，2 大部分，3 完整且多处一致）
-  - structure：资料能否还原全书的论证结构或章节脉络
-  - corroboration：是否有 2 个以上独立来源互相印证，而非同一篇文章的转载
-- can_generate 的条件：总分 ≥ 门槛，且 core_concepts ≥ 2，且不 ambiguous。
+步骤：
+1. 先根据资料确认是哪一本书（作者、译者、出版社）。同名书、续作、衍生读物要分清；同一本书的不同版本或译本不算歧义。
+2. 不看资料，写出你记得的这本书的核心概念（5–8 个）和全书结构（主要部分）。不确定的不要写。
+3. 对照资料，标出你写的核心概念里哪些被资料提到或印证（哪怕只是一笔带过）。如果资料和你的记忆有冲突，以资料为准，并在 conflicts 中说明。
+
+打分（每项 0–3 分）：
+- identity：资料能否确认这本书的身份（3 = 作者和出版信息清楚一致）
+- corroborated：你列出的核心概念中，被资料印证的有多少（0 没有，1 一个，2 两三个，3 四个以上）
+- familiarity：你对这本书内容的掌握程度（3 = 能讲清全书结构和主要论证；2 = 熟悉核心概念，结构大致清楚；1 = 只知道主旨；0 = 不了解）。要诚实，冷门书不要高估自己。
 
 只输出 JSON：
 {
   "identified": {"title": "", "author": "", "translator": "", "publisher": "", "isbn": ""},
   "ambiguous": false,
   "candidates": [{"title": "", "author": "", "note": ""}],
-  "scores": {"core_concepts": 0, "structure": 0, "corroboration": 0},
-  "total": 0,
-  "can_generate": false,
-  "key_points": [{"point": "已被资料确认的核心观点", "sources": [1, 3]}],
-  "unverified": ["你印象中有、但资料没有确认的要点"],
-  "reason": "一两句话说明判断理由"
+  "my_concepts": [{"concept": "核心概念及一句话说明", "corroborated_by": [1, 3]}],
+  "my_structure": ["全书主要部分"],
+  "conflicts": ["资料与你的记忆冲突之处"],
+  "scores": {"identity": 0, "corroborated": 0, "familiarity": 0},
+  "reason": "一两句话说明判断依据"
 }`;
 
-export function assessUser({ title, author, evidence, threshold }) {
+export function assessUser({ title, author, evidence }) {
   return `书名：《${title}》${author ? `\n作者：${author}` : ''}
-门槛：${threshold}
 
 检索资料：
 ${evidence}`;
@@ -84,8 +85,11 @@ ${categoryListText()}
 ${PAGE_SHAPE}`;
 
 export function generateUser({ title, author, assessment, notes }) {
-  const facts = assessment?.key_points?.length
-    ? assessment.key_points.map((k, i) => `${i + 1}. ${k.point}${k.sources?.length ? `（来源 ${k.sources.join(',')}）` : ''}`).join('\n')
+  const concepts = assessment?.my_concepts || [];
+  const confirmed = concepts.filter(c => c.corroborated_by?.length);
+  const unconfirmed = concepts.filter(c => !c.corroborated_by?.length);
+  const facts = confirmed.length
+    ? confirmed.map((k, i) => `${i + 1}. ${k.concept}（资料 ${k.corroborated_by.join(',')}）`).join('\n')
     : '（无）';
   return `请为这本书生成精读学习页 JSON。
 
@@ -95,8 +99,14 @@ ${assessment?.identified?.translator ? `译者：${assessment.identified.transla
 ## 已被资料确认的要点
 ${facts}
 
-## 资料印象中有但未被确认的要点（只能在你确有把握时使用）
-${(assessment?.unverified || []).join('\n') || '（无）'}
+## 你记得、但资料未印证的要点（只能在你确有把握时使用）
+${unconfirmed.map(c => c.concept).join('\n') || '（无）'}
+
+## 全书结构（来自你的记忆，供参考）
+${(assessment?.my_structure || []).join('\n') || '（无）'}
+
+## 资料与记忆冲突之处（以资料为准）
+${(assessment?.conflicts || []).join('\n') || '（无）'}
 
 ## 参考资料
 ${notes}`;

@@ -8,14 +8,14 @@ export function slugify(s) {
   return s.replace(/[《》\s/\\?:*"<>|]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'book';
 }
 
-/** 针对一本书构造几组查询：元数据、核心观点、章节结构、书评。 */
+/** 针对一本书构造几组偏向“内容”的查询：核心观点、要点笔记、各章概要、书评解读。书目信息在这些结果里通常也会出现。 */
 function queries(title, author) {
   const t = `《${title}》${author ? ' ' + author : ''}`;
   return [
-    `${t} 作者 出版社 ISBN`,
-    `${t} 核心观点 主要内容`,
-    `${t} 章节 目录 读书笔记`,
-    `${t} 书评 解读`,
+    `${t} 核心观点 主要内容 概念`,
+    `${t} 读书笔记 要点 总结`,
+    `${t} 各章 内容 概要`,
+    `${t} 书评 解读 作者观点`,
   ];
 }
 
@@ -47,7 +47,9 @@ export async function searchBook(title, author = '') {
   // 按 URL 去重，并去掉盗版下载类页面（不作为资料，也不会出现在书页来源里）
   const seen = new Set();
   const piracy = /(下载|高清|pdf|epub|mobi|azw3|txt全文|全文阅读|电子书免费|网盘)/i;
-  results = results.filter(r => r.url && !seen.has(r.url) && seen.add(r.url) && !piracy.test(r.title || ''));
+  // 书店商品页、旧书网、试读页只有书目信息，没有内容价值
+  const shop = /(孔夫子|旧书|正版|现货|购物车|京东价|淘宝|天猫|当当|拼多多|在线阅读|版权信息|试读|包邮)/;
+  results = results.filter(r => r.url && !seen.has(r.url) && seen.add(r.url) && !piracy.test(r.title || '') && !shop.test((r.title || '') + (r.text || '').slice(0, 80)));
   const out = { title, author, provider: SEARCH.provider, results, cost, at: new Date().toISOString() };
   await mkdir(CACHE, { recursive: true });
   await writeFile(file, JSON.stringify(out, null, 2));

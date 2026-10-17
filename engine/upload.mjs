@@ -70,7 +70,7 @@ export async function extractNotes(text, title, { concurrency = 4, onProgress } 
         alias: ROLES.extract,
         task: 'extract',
         book: title,
-        maxTokens: 3000,
+        maxTokens: 8000,
         messages: [
           { role: 'system', content: EXTRACT_SYSTEM },
           { role: 'user', content: `书名：《${title}》，第 ${i + 1}/${parts.length} 段原文：\n\n${parts[i]}` },

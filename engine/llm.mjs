@@ -119,6 +119,12 @@ async function fetchStream(model, body, onDelta) {
         }
       }
     }
+  } catch (e) {
+    // 流式传输中途断开（如 undici 的 terminated / 对端关闭连接），可以重试
+    const cause = e.cause?.code || e.cause?.message || '';
+    const err = new Error(`${model.alias} 连接中断：${e.message}${cause ? `（${cause}）` : ''}，已收到 ${text.length} 字`);
+    err.retryable = e.name !== 'AbortError';
+    throw err;
   } finally {
     clearTimeout(timer);
   }
