@@ -1,4 +1,5 @@
-import { CREDITS_PER_YUAN, PRICES } from '../../config/plans.mjs';
+import { CREDITS_PER_YUAN, PACKS, PRICES } from '../../config/plans.mjs';
+import EarnRules from '../components/EarnRules';
 import PlanCards from '../components/PlanCards';
 
 export const metadata = { title: '价格' };
@@ -19,8 +20,19 @@ export default function Pricing() {
           <li>当天的免费提问用完后，每次提问扣 {PRICES.extraAsk} 积分。回答中断时不扣。</li>
           <li>播客对所有人免费。第一位点播放的读者触发生成，之后所有人共享。</li>
         </ul>
-        <p className="muted small">在线支付即将开通。内测期间如需积分或会员，请联系管理员。</p>
       </div>
+      <section className="stack">
+        <h2 style={{ fontSize: 24 }}>读书赚积分</h2>
+        <p className="muted" style={{ maxWidth: 680 }}>不想花钱也能多生成：读完书、生成别人也想读的书，都会得到积分。大约读完 6 本，就够多生成 1 本。</p>
+        <EarnRules />
+      </section>
+      <section className="stack">
+        <h2 style={{ fontSize: 24 }}>充值积分</h2>
+        <div className="packs">
+          {PACKS.map(p => <div key={p.yuan}><b>¥{p.yuan}</b><span className="num">{p.credits} 积分</span><small>{p.note || '\u00a0'}</small></div>)}
+        </div>
+        <p className="muted small">在线支付即将开通。内测期间如需积分或会员，请联系管理员。</p>
+      </section>
     </div>
   );
 }

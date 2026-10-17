@@ -197,3 +197,21 @@ button,input,textarea,select{font:inherit;color:inherit}
   .suggest{top:112px}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* 积分规则、等级、排行榜 */
+.earn{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.earn div{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:2px}
+.earn b{font-size:24px;color:var(--tension)}
+.earn span{font-weight:500}
+.earn small{font-size:13px;color:var(--muted);line-height:1.5}
+.levels{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.levels span{display:inline-flex;gap:6px;align-items:baseline;border:1px solid var(--line);border-radius:99px;padding:3px 12px;font-size:14px;background:var(--surface)}
+.levels small{color:var(--muted);font-size:12px}
+.tbl tr.me td{background:var(--accent-soft)}
+.packs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.packs div{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:2px}
+.packs b{font-family:var(--f-display);font-size:24px}
+.packs small{color:var(--tension);font-size:13px}
+.lvbar{height:8px;border-radius:99px;background:var(--line);overflow:hidden}
+.lvbar i{display:block;height:100%;background:var(--accent)}
+@media (max-width:760px){.earn,.packs{grid-template-columns:repeat(2,minmax(0,1fr))}}

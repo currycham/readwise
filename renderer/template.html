@@ -141,6 +141,33 @@ textarea{width:100%;min-height:76px;border:1px solid var(--line);border-radius:8
 .explain{font-size:14px;background:var(--bg);border-radius:8px;padding:8px 12px}
 .score{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
 .score .big{font-family:var(--f-mono);font-size:26px;font-variant-numeric:tabular-nums}
+/* 闯关检测 */
+.qgame{display:flex;flex-direction:column;gap:16px}
+.qhud{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.qhud .big{font-family:var(--f-mono);font-size:22px;font-variant-numeric:tabular-nums;margin-left:auto}
+.dots{display:flex;gap:5px;flex-wrap:wrap}
+.dots i{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--line);background:var(--bg)}
+.dots i.cur{border-color:var(--accent)}
+.dots i.ok{background:var(--ok);border-color:var(--ok)}
+.dots i.no{background:var(--bad);border-color:var(--bad)}
+.combo{font-family:var(--f-mono);font-size:13px;color:var(--tension);background:var(--tension-soft);border-radius:99px;padding:2px 10px}
+.combo:empty{display:none}
+.combo.hot{animation:pop .35s ease}
+@keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.18)}100%{transform:scale(1)}}
+.qrule{font-size:14px;color:var(--muted)}
+.qstage{display:flex;flex-direction:column;gap:10px}
+.qstage .stem{font-size:18px;font-weight:500}
+.qstage .opts{grid-template-columns:1fr}
+.qstage .opt{padding:10px 14px;font-size:16px}
+.verdict{font-weight:700}
+.verdict.ok{color:var(--ok)} .verdict.no{color:var(--bad)}
+.qlock{text-align:center;padding:12px 0;display:flex;flex-direction:column;gap:6px;align-items:center}
+.qlock .big{font-family:var(--f-mono);font-size:34px}
+.qend{display:flex;gap:20px;align-items:center;flex-wrap:wrap}
+.grade{font-family:var(--f-display);font-size:64px;font-weight:800;line-height:1;width:96px;height:96px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid currentColor}
+.grade.S{color:var(--tension)} .grade.A{color:var(--accent)} .grade.B{color:var(--ok)} .grade.C{color:var(--muted)}
+.gain{font-family:var(--f-mono);font-size:20px;color:var(--tension);font-weight:700}
+.wrongs{display:flex;flex-direction:column;gap:4px;font-size:14px}
 
 .field{display:flex;flex-direction:column;gap:6px}
 .field label{font-weight:500}
@@ -285,14 +312,13 @@ footer a{color:var(--muted)}
     <header>
       <div class="label">第 3 步 · 检测 · 5 分钟 · 交错练习</div>
       <div class="shead"><h2>12 道快问快答</h2><button class="btn primary sm" data-start="2">开始计时 5:00</button></div>
-      <p class="how">每题不超过 25 秒，凭第一反应作答。错题的解释会告诉你回哪一块。</p>
+      <p class="how">一题一题闯关，每题不超过 25 秒，凭第一反应作答。连续答对有连击，答错会告诉你回哪一块。</p>
     </header>
-    <div class="card score">
-      <div><div class="label">得分</div><div class="big" id="qscore">0 / 12</div></div>
-      <button class="btn" id="qwrong">只看错题</button>
-      <button class="btn" id="qreset">重做</button>
+    <div class="card qgame">
+      <div class="qhud"><div class="dots" id="qdots" aria-label="答题进度"></div><span class="combo" id="qcombo"></span><span class="big" id="qscore">0 / 12</span></div>
+      <div class="qrule" id="qrule"></div>
+      <div class="qstage" id="qstage" aria-live="polite"></div>
     </div>
-    <div class="qlist" id="quiz"></div>
     <button class="btn finish" data-finish="2" aria-pressed="false">完成第 3 步</button>
   </section>
 
@@ -374,7 +400,7 @@ $('#title').textContent=bk.title;
 $('#enTitle').textContent=[bk.original_title,bk.author_en].filter(Boolean).join(' · ')||'精读手册';
 $('#by').innerHTML=esc(bk.author)+' 著'+(bk.douban&&bk.douban.rating?`　<span class="db">豆瓣 ${Number(bk.douban.rating).toFixed(1)}${bk.douban.count?`（${Number(bk.douban.count).toLocaleString()} 人评价）`:''}</span>`:'')+(SITE&&SITE.first_by?`　<span style="font-size:13px">首位生成：${esc(SITE.first_by)}</span>`:'');
 if(SITE){const sb=$('#sitebar');sb.hidden=false;
-  sb.innerHTML=`<span><a href="/"><b>Readwise</b></a><a href="/library">书库</a></span><span>${SITE.viewer?`<a href="/me">${esc(SITE.viewer.nickname)}</a>`:`<a href="/login?next=${here}">登录 / 注册</a>`}</span>`;
+  sb.innerHTML=`<span><a href="/"><b>Readwise</b></a><a href="/library">书库</a></span><span>${SITE.viewer?`<a href="/me">${esc(SITE.viewer.nickname)}${SITE.viewer.level?` · ${esc(SITE.viewer.level)}`:''}</a>`:`<a href="/login?next=${here}">登录 / 注册</a>`}</span>`;
   $('#report').hidden=false}
 $('#cats').innerHTML=(bk.categories||[]).map(c=>`<span class="chip">${esc(c.top)} · ${esc(c.sub)}</span>`).join('');
 const R=B.recommend;
@@ -456,22 +482,74 @@ $('#cloze').addEventListener('click',e=>{const b=e.target.closest('.blank');if(!
 $('#clozeReset').onclick=()=>{S.cz={};save();document.querySelectorAll('.blank').forEach(b=>{b.classList.remove('on');b.setAttribute('aria-label','点击揭晓')});czCount()};
 czCount();
 
-/* ---------- quiz ---------- */
-const QZ=B.quiz;let wrongOnly=false;
-function renderQuiz(){
-  const html=QZ.map((q,i)=>{const a=S.quiz[i],done=a!==undefined;
-    if(wrongOnly&&(!done||a===q.answer))return '';
-    return `<div class="card qq" data-q="${i}"><div class="qn">${i+1} / ${QZ.length}</div><div class="stem">${esc(q.q)}</div>
-     <div class="opts">${q.options.map((o,j)=>{let c='';if(done){if(j===q.answer)c='right';else if(j===a)c='wrong'}return `<button class="opt ${c}" data-j="${j}" ${done?'disabled':''}>${'ABCD'[j]}. ${esc(o)}</button>`}).join('')}</div>
-     ${done?`<div class="explain"><b style="color:${a===q.answer?'var(--ok)':'var(--bad)'}">${a===q.answer?'对。':'错。'}</b> ${esc(q.why)} <a href="#c${q.chunk}">（块 ${q.chunk}）</a></div>`:''}</div>`}).join('');
-  $('#quiz').innerHTML=html||'<div class="card how">没有错题。</div>';
-  const n=Object.keys(S.quiz).length,ok=QZ.filter((q,i)=>S.quiz[i]===q.answer).length;
-  $('#qscore').textContent=`${ok} / ${QZ.length}`+(n<QZ.length?`　已答 ${n}`:'');
-  $('#qwrong').textContent=wrongOnly?'显示全部':'只看错题';
+/* ---------- quiz（闯关） ---------- */
+// 网站上答案不下发，每题请求 /api/quiz 判分；登录用户的首次闯关计分发积分。离线页面（答案在本地）直接判。
+const QZ=B.quiz,QS=SITE&&SITE.quiz||null,QR=QS&&QS.rewards||null;
+const LOCAL=QZ.every(q=>q.answer!==undefined);
+let qmode=!QS||!SITE.viewer?'practice':QS.completion?'done':'ranked';
+let run={},qfb=null,qlock=QS&&QS.lock||0,qbusy=false,qerr='';
+if(qmode==='practice'){const o=S.quiz||{};for(const k in o)if(o[k]&&typeof o[k]==='object')run[k]=o[k]}
+else run=Object.assign({},QS.answered||{});
+const qnext=()=>{for(let i=0;i<QZ.length;i++)if(!run[i])return i;return -1};
+function qstats(){let ok=0,c=0,max=0,n=0;for(let i=0;i<QZ.length;i++){const r=run[i];if(!r)continue;n++;if(r.correct){ok++;c++;max=Math.max(max,c)}else c=0}return {ok,n,combo:c,max}}
+async function qgrade(i,j){
+  if(LOCAL){const q=QZ[i];return {choice:j,correct:j===q.answer,answer:q.answer,why:q.why,chunk:q.chunk}}
+  const r=await fetch(API+'/api/quiz',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({slug:SLUG,q:i,choice:j})});
+  const d=await r.json();if(!r.ok)throw new Error(d.error||('服务返回 '+r.status));return d}
+function qrule(){
+  if(!SITE)return '凭第一反应作答，答错会告诉你回哪一块。';
+  if(qmode==='ranked')return `首次闯关计分：答对 ${QR.pass} 题及格得 <b>${QR.complete} 积分</b>，全对再加 ${QR.perfect}。每题只算第一次作答。`;
+  if(qmode==='done'){const c=QS.completion;return `你的首次闯关：${c.score} / ${c.total}${c.credits?`，获得 ${c.credits} 积分`:''}。`}
+  if(!SITE.viewer)return `练习模式，不计分。<a href="/login?next=${here}">登录</a>后首次闯关及格可得 ${QR.complete} 积分。`;
+  return '练习模式，不计分。';
 }
-$('#quiz').addEventListener('click',e=>{const b=e.target.closest('.opt');if(!b||b.disabled)return;S.quiz[b.closest('.qq').dataset.q]=+b.dataset.j;save();renderQuiz()});
-$('#qwrong').onclick=()=>{wrongOnly=!wrongOnly;renderQuiz()};
-$('#qreset').onclick=()=>{S.quiz={};wrongOnly=false;save();renderQuiz()};
+const grade=(ok,t)=>ok===t?'S':ok>=Math.ceil(t*5/6)?'A':ok>=(QR?QR.pass:Math.ceil(t*2/3))?'B':'C';
+function qoptions(i,r){return `<div class="opts">${QZ[i].options.map((o,j)=>{let c='';if(r){if(j===r.answer)c='right';else if(j===r.choice)c='wrong'}
+  return `<button class="opt ${c}" data-j="${j}" ${r||qbusy?'disabled':''}>${'ABCD'[j]}. ${esc(o)}</button>`}).join('')}</div>`}
+function renderQuiz(){
+  const st=qstats(),cur=qfb!==null?qfb:qnext();
+  $('#qdots').innerHTML=QZ.map((q,i)=>`<i class="${run[i]?(run[i].correct?'ok':'no'):i===cur?'cur':''}" title="第 ${i+1} 题"></i>`).join('');
+  $('#qscore').textContent=`${st.ok} / ${QZ.length}`;
+  const cb=$('#qcombo');cb.textContent=st.combo>=2?`连对 ×${st.combo}`:'';cb.classList.remove('hot');if(st.combo>=3){void cb.offsetWidth;cb.classList.add('hot')}
+  $('#qrule').innerHTML=qrule();
+  const stage=$('#qstage'),err=qerr?`<div class="readout" style="color:var(--bad)">${esc(qerr)}</div>`:'';
+  if(qmode==='ranked'&&qlock>0&&!st.n){
+    stage.innerHTML=`<div class="qlock"><div class="label">计分闯关倒计时</div><div class="big">${mmss(qlock)}</div><p class="how">打开本页满 ${QR.minMinutes} 分钟后开始计分闯关。先读完前两步再来，记得更牢。</p></div>`;return}
+  if(qfb!==null){const i=qfb,r=run[i],last=qnext()<0;
+    stage.innerHTML=`<div class="qn readout">第 ${i+1} / ${QZ.length} 题 · 块 ${QZ[i].chunk}</div><div class="stem">${esc(QZ[i].q)}</div>${qoptions(i,r)}
+      <div class="explain"><span class="verdict ${r.correct?'ok':'no'}">${r.correct?(st.combo>=3?`漂亮！连对 ${st.combo} 题`:'答对了'):'答错了'}</span>　${esc(r.why)} <a href="#c${r.chunk}">回看块 ${r.chunk}</a></div>
+      <div class="ctrl"><button class="btn primary" id="qgo">${last?'看结算':'下一题 →'}</button></div>`;
+    $('#qgo').onclick=()=>{qfb=null;renderQuiz()};$('#qgo').focus({preventScroll:true});return}
+  const i=qnext();
+  if(i>=0){stage.innerHTML=`<div class="qn readout">第 ${i+1} / ${QZ.length} 题 · 块 ${QZ[i].chunk}</div><div class="stem">${esc(QZ[i].q)}</div>${qoptions(i,null)}${err}`;
+    stage.querySelectorAll('.opt').forEach(b=>b.onclick=()=>qanswer(i,+b.dataset.j));return}
+  const g=grade(st.ok,QZ.length),c=QS&&QS.completion,wr=QZ.map((q,k)=>k).filter(k=>run[k]&&!run[k].correct);
+  let gain='';
+  if(qmode==='done'&&c)gain=c.credits?`<div class="gain">+${c.credits} 积分</div>`:'';
+  const note=qmode==='done'&&c&&c.note?`<div class="how">${esc(c.note)}</div>`:(!SITE||SITE.viewer?'':`<div class="how"><a href="/login?next=${here}">登录</a>后首次闯关及格可得 ${QR.complete} 积分。</div>`);
+  stage.innerHTML=`<div class="qend"><div class="grade ${g}">${g}</div><div><div class="big num" style="font-size:26px">${st.ok} / ${QZ.length}</div><div class="readout">最长连对 ${st.max} 题</div>${gain}${note}</div></div>
+    ${wr.length?`<div class="wrongs"><b>答错的题，回去看看：</b>${wr.map(k=>`<a href="#c${QZ[k].chunk}">第 ${k+1} 题：${esc(QZ[k].q)} → 块 ${QZ[k].chunk}</a>`).join('')}</div>`:'<div class="how">全部答对，这本书你已经吃透了。</div>'}
+    <div class="ctrl"><button class="btn" id="qagain">再练一次（不计分）</button></div>`;
+  $('#qagain').onclick=()=>{qmode='practice';run={};S.quiz={};save();qfb=null;qerr='';renderQuiz()};
+}
+async function qanswer(i,j){
+  if(qbusy)return;qbusy=true;qerr='';renderQuiz();
+  try{
+    const d=await qgrade(i,j);
+    if(d.locked){qlock=d.locked;qtick()}
+    else{
+      run[i]={choice:d.choice,correct:d.correct,answer:d.answer,why:d.why,chunk:d.chunk};
+      if(qmode==='ranked'&&d.practice){qmode='practice'}
+      if(d.completion){QS.completion=d.completion;qmode='done'}
+      if(qmode==='practice'){S.quiz=run;save()}
+      qfb=i;
+    }
+  }catch(e){qerr='没有提交成功：'+e.message}
+  qbusy=false;renderQuiz();
+}
+let qtimer=null;
+function qtick(){clearInterval(qtimer);if(qlock<=0)return;qtimer=setInterval(()=>{qlock--;if(qlock<=0)clearInterval(qtimer);if(!qstats().n)renderQuiz()},1000)}
+qtick();renderQuiz();
 
 /* ---------- internalize ---------- */
 $('#claimLabel').textContent=`1. 有道理吗？对全书核心主张“${B.internalize.claim}”表态`;

@@ -8,6 +8,7 @@ import { podcastScript, synthesizePodcast } from '../engine/podcast.mjs';
 import { validatePage } from '../engine/schema.mjs';
 import { insertBook, updateBook } from '../lib/books.mjs';
 import { getDb } from '../lib/db.mjs';
+import { rewardGenerate } from '../lib/rewards.mjs';
 import { claimJob, finishJob, recordUsage, requeueStale, setProgress } from '../lib/jobs.mjs';
 
 const CONCURRENCY = Number(process.env.WORKER_CONCURRENCY || 2);
@@ -38,7 +39,8 @@ async function runGenerate(job) {
       return finishJob(job.id, { status: 'done', bookId: id, result: { slug: b.slug, regenerated: true } });
     }
     const { book, existed } = insertBook(r.page, { userId: job.user_id, model: r.model, source: r.source, checkScore: r.check?.score, requestedTitle: title });
-    finishJob(job.id, { status: 'done', bookId: book.id, result: { slug: book.slug, existed } });
+    const reward = existed ? 0 : rewardGenerate(job, book.id);
+    finishJob(job.id, { status: 'done', bookId: book.id, result: { slug: book.slug, existed, reward } });
   } finally {
     if (file) await rm(file, { force: true }); // 上传的原文处理完即删除
   }

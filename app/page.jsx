@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { CATEGORIES } from '../config/categories.mjs';
 import { categoryCounts, countBooks, listBooks } from '../lib/books.mjs';
 import { quotaSummary } from '../lib/credits.mjs';
+import EarnRules from './components/EarnRules';
 import PlanCards from './components/PlanCards';
 import BookCard from './components/BookCard';
 import SearchBox from './components/SearchBox';
@@ -100,6 +101,13 @@ export default async function Home() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      <section className="sec">
+        <div className="wrap">
+          <div className="sec-head"><h2>读书赚积分，冲上排行榜</h2><Link href="/rank" className="small">查看排行榜 →</Link></div>
+          <EarnRules compact />
         </div>
       </section>
 
