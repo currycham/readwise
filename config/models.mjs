@@ -12,13 +12,13 @@ export const PROVIDERS = {
     keyEnv: 'DEEPSEEK_API_KEY',
   },
   hunyuan: {
-    // 混元 OpenAI 兼容接口；若通过腾讯云 TokenHub 调用，改用 tokenhub
+    // 混元旧版接口（正迁移到 TokenHub），新 key 请用 tokenhub
     baseURL: env.HUNYUAN_BASE_URL || 'https://api.hunyuan.cloud.tencent.com/v1',
     keyEnv: 'HUNYUAN_API_KEY',
   },
   tokenhub: {
-    // 腾讯云 TokenHub：在控制台获取兼容接口地址后填入 TOKENHUB_BASE_URL
-    baseURL: env.TOKENHUB_BASE_URL || '',
+    // 腾讯云 TokenHub 按量计费接口（Token Plan 订阅用 https://api.lkeap.cloud.tencent.com/plan/v3）
+    baseURL: env.TOKENHUB_BASE_URL || 'https://tokenhub.tencentmaas.com/v1',
     keyEnv: 'TOKENHUB_API_KEY',
   },
   dashscope: {

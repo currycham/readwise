@@ -32,12 +32,7 @@ export async function searchBook(title, author = '') {
     const apiKey = process.env[SEARCH.bocha.keyEnv];
     if (!apiKey) throw new Error(`缺少 ${SEARCH.bocha.keyEnv}；没有搜索 key 时可设 SEARCH_PROVIDER=none 测试`);
     for (const q of queries(title, author)) {
-      const res = await fetch(SEARCH.bocha.url, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json', authorization: `Bearer ${apiKey}` },
-        body: JSON.stringify({ query: q, summary: true, count: 8, freshness: 'noLimit' }),
-      });
-      if (!res.ok) throw new Error(`博查搜索返回 ${res.status}：${(await res.text()).slice(0, 300)}`);
+      const res = await bochaFetch(apiKey, q);
       const j = await res.json();
       const pages = j.data?.webPages?.value || j.webPages?.value || [];
       for (const p of pages) {
@@ -66,4 +61,26 @@ export function evidenceText(search, max = 24000) {
     if (s.length + block.length <= max) s += block;
   });
   return s || '（没有检索结果）';
+}
+
+/** 博查有 QPS 限制：每次请求间隔 1.2 秒，遇到 429 退避重试（最多 5 次）。 */
+let lastCall = 0;
+async function bochaFetch(apiKey, query) {
+  for (let attempt = 0; ; attempt++) {
+    const wait = lastCall + 1200 - Date.now();
+    if (wait > 0) await new Promise(r => setTimeout(r, wait));
+    lastCall = Date.now();
+    const res = await fetch(SEARCH.bocha.url, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${apiKey}` },
+      body: JSON.stringify({ query, summary: true, count: 8, freshness: 'noLimit' }),
+    });
+    if (res.ok) return res;
+    const detail = (await res.text()).slice(0, 300);
+    if (res.status === 429 && attempt < 5) {
+      await new Promise(r => setTimeout(r, 3000 * 2 ** attempt));
+      continue;
+    }
+    throw new Error(`博查搜索返回 ${res.status}：${detail}`);
+  }
 }
