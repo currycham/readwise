@@ -59,14 +59,14 @@ export const MODELS = {
   },
   'qwen-max': {
     provider: 'dashscope',
-    model: env.QWEN_MAX_MODEL || 'qwen3.7-max',
+    model: env.QWEN_MAX_MODEL || 'qwen3.8-max',
     price: { input: 9, cachedInput: 1.8, output: 27 }, // 待核实
     maxOutput: 32000,
     jsonMode: true,
   },
   'qwen-plus': {
     provider: 'dashscope',
-    model: env.QWEN_PLUS_MODEL || 'qwen-plus',
+    model: env.QWEN_PLUS_MODEL || 'qwen3.7-plus',
     price: { input: 0.8, cachedInput: 0.16, output: 2 }, // 待核实
     maxOutput: 16000,
     jsonMode: true,

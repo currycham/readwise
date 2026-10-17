@@ -11,6 +11,7 @@
     "podcast-script": "node --env-file-if-exists=.env scripts/podcast-script.mjs",
     "render": "node scripts/render.mjs",
     "check": "node scripts/check.mjs",
+    "ping": "node --env-file-if-exists=.env scripts/ping.mjs",
     "dev": "node --env-file-if-exists=.env server/dev-server.mjs"
   }
 }

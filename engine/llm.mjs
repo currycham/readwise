@@ -67,7 +67,7 @@ export async function chat(o) {
 
 async function fetchStream(model, body, onDelta) {
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 15 * 60 * 1000);
+  const timer = setTimeout(() => ctrl.abort(), 30 * 60 * 1000);
   let res;
   try {
     res = await fetch(`${model.baseURL}/chat/completions`, {

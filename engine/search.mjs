@@ -49,9 +49,10 @@ export async function searchBook(title, author = '') {
     throw new Error(`未知搜索供应商：${SEARCH.provider}`);
   }
 
-  // 按 URL 去重
+  // 按 URL 去重，并去掉盗版下载类页面（不作为资料，也不会出现在书页来源里）
   const seen = new Set();
-  results = results.filter(r => r.url && !seen.has(r.url) && seen.add(r.url));
+  const piracy = /(下载|高清|pdf|epub|mobi|azw3|txt全文|全文阅读|电子书免费|网盘)/i;
+  results = results.filter(r => r.url && !seen.has(r.url) && seen.add(r.url) && !piracy.test(r.title || ''));
   const out = { title, author, provider: SEARCH.provider, results, cost, at: new Date().toISOString() };
   await mkdir(CACHE, { recursive: true });
   await writeFile(file, JSON.stringify(out, null, 2));

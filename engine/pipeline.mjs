@@ -13,6 +13,7 @@ import { extractNotes, readBookFile } from './upload.mjs';
  * @param {string} [o.author]
  * @param {string} [o.file]          上传的原文路径（txt/pdf/epub）
  * @param {string} [o.model]         生成用模型 alias，默认 ROLES.generate
+ * @param {string} [o.checkModel]    质检用模型 alias，默认 ROLES.check
  * @param {boolean} [o.skipCheck]
  * @param {(msg:string)=>void} [o.log]
  */
@@ -65,7 +66,7 @@ export async function buildBookPage(o) {
     alias: genModel, task: 'generate', book: title, temperature: 0.6,
     messages: [{ role: 'system', content: P.GENERATE_SYSTEM }, { role: 'user', content: P.generateUser({ title, author, assessment, notes }) }],
   }));
-  let page = gen.data;
+  let page = shuffleQuiz(gen.data);
 
   // 3. 结构校验，不通过就让同一模型修一次
   let errors = validatePage(page);
@@ -78,16 +79,17 @@ export async function buildBookPage(o) {
         { role: 'user', content: `下面的书页 JSON 有结构问题，请修正后输出完整 JSON：\n${errors.join('\n')}\n\n${JSON.stringify(page)}` },
       ],
     }));
-    page = fix.data;
+    page = shuffleQuiz(fix.data);
     errors = validatePage(page);
   }
 
   // 4. 质检与修正
   let check = null;
   if (!o.skipCheck) {
-    log(`用 ${ROLES.check} 质检…`);
+    const checkModel = o.checkModel || ROLES.check;
+    log(`用 ${checkModel} 质检…`);
     const c = step('check', await chatJSON({
-      alias: ROLES.check, task: 'check', book: title, maxTokens: 6000,
+      alias: checkModel, task: 'check', book: title, maxTokens: 6000,
       messages: [{ role: 'system', content: P.CHECK_SYSTEM }, { role: 'user', content: P.checkUser({ page, notes }) }],
     }));
     check = c.data;
@@ -98,7 +100,7 @@ export async function buildBookPage(o) {
         alias: genModel, task: 'repair', book: title,
         messages: [{ role: 'system', content: P.REPAIR_SYSTEM }, { role: 'user', content: P.repairUser({ page, issues: serious }) }],
       }));
-      const repaired = r.data;
+      const repaired = shuffleQuiz(r.data);
       const repErrors = validatePage(repaired);
       if (repErrors.length <= errors.length) { page = repaired; errors = repErrors; }
     }
@@ -124,4 +126,29 @@ export async function buildBookPage(o) {
     log(`完成：${out.status}，用时 ${(out.ms / 1000).toFixed(0)} 秒，成本 ¥${out.cost.toFixed(3)}`);
     return out;
   }
+}
+
+/**
+ * 模型给出的正确答案位置常有规律（如 0123 循环）。这里把每题的选项重新排列：
+ * 12 题的正确答案在 A–D 各出现 3 次、顺序随机，并避免连续 3 题答案相同。
+ */
+export function shuffleQuiz(page) {
+  if (!Array.isArray(page?.quiz)) return page;
+  const n = page.quiz.length;
+  let targets;
+  for (let tries = 0; tries < 50; tries++) {
+    targets = Array.from({ length: n }, (_, i) => i % 4);
+    for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [targets[i], targets[j]] = [targets[j], targets[i]]; }
+    if (!targets.some((t, i) => i >= 2 && t === targets[i - 1] && t === targets[i - 2])) break;
+  }
+  page.quiz.forEach((q, i) => {
+    if (!Array.isArray(q.options) || q.options.length !== 4 || !Number.isInteger(q.answer) || !q.options[q.answer]) return;
+    const correct = q.options[q.answer];
+    const others = q.options.filter((_, j) => j !== q.answer);
+    for (let k = others.length - 1; k > 0; k--) { const j = Math.floor(Math.random() * (k + 1)); [others[k], others[j]] = [others[j], others[k]]; }
+    others.splice(targets[i], 0, correct);
+    q.options = others;
+    q.answer = targets[i];
+  });
+  return page;
 }

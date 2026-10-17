@@ -36,7 +36,7 @@ export const PAGE_SHAPE = `{
     {
       "title": "知识块标题",
       "one": "一句话核心",
-      "core": ["核心论述段落 4–5 段，每段 60–150 字"],
+      "core": ["核心论述段落 4–5 段，每段 60–120 字"],
       "terms": [{"term": "术语", "def": "定义"}],
       "arg": ["论证链节点（可为空数组）"],
       "example": "具体生活例子",
@@ -97,12 +97,21 @@ export function validatePage(p) {
     const at = `chunks[${i}]`;
     need(isStr(c.title) && isStr(c.one), `${at}.title / one 缺失`);
     need(Array.isArray(c.core) && c.core.length >= 4 && c.core.length <= 6 && c.core.every(isStr), `${at}.core 需要 4–6 段`);
+    if (Array.isArray(c.core) && c.core.length) {
+      const avg = c.core.reduce((n, x) => n + len(x), 0) / c.core.length;
+      need(avg >= 40, `${at}.core 段落过短（平均 ${Math.round(avg)} 字，需要每段 60–120 字的完整论述）`);
+    }
+    need(!/^(误解|容易误解)[:：]/.test(c.myth || '') && !/^例子[:：]/.test(c.example || ''), `${at}.example / myth 不要以“例子：”“误解：”开头`);
     need(Array.isArray(c.terms) && c.terms.length >= 1 && c.terms.every(t => isStr(t.term) && isStr(t.def)), `${at}.terms 至少 1 个`);
     need(Array.isArray(c.arg), `${at}.arg 需要是数组（可以为空）`);
     need(isStr(c.example) && isStr(c.myth), `${at}.example / myth 缺失`);
     need(Array.isArray(c.recall) && c.recall.length === 2 && c.recall.every(x => isStr(x.q) && isStr(x.a)), `${at}.recall 需要正好 2 题`);
   });
   const nChunks = ch?.length || 0;
+  if (Array.isArray(ch) && ch.length) {
+    const total = ch.reduce((n, c) => n + len([c.one, ...(c.core || []), ...(c.terms || []).map(t => (t.term || '') + (t.def || '')), c.example, c.myth, ...(c.recall || []).map(r => (r.q || '') + (r.a || ''))].join('')), 0);
+    need(total >= 4300, `知识块内容偏少（合计 ${total} 字，需要约 4800–6500 字）`);
+  }
   for (const side of ['left', 'right']) {
     (map[side]?.nodes || []).forEach((n, i) => need(Number.isInteger(n.chunk) && n.chunk >= 1 && n.chunk <= nChunks, `inspect.map.${side}.nodes[${i}].chunk 超出范围`));
   }
@@ -120,7 +129,9 @@ export function validatePage(p) {
   if (Array.isArray(p.quiz) && p.quiz.length) {
     const counts = [0, 0, 0, 0];
     p.quiz.forEach(q => counts[q.answer] != null && counts[q.answer]++);
-    need(Math.max(...counts) <= 6, `quiz 正确答案分布过于集中：${counts.join('/')}`);
+    need(Math.max(...counts) <= 4 && Math.min(...counts) >= 2, `quiz 正确答案分布不均：${counts.join('/')}（每个位置 2–4 次）`);
+    const seq = p.quiz.map(q => q.answer).join('');
+    need(!/^(0123)+$|^(3210)+$|^(\d)\1*$/.test(seq) && !/^(\d{2,4})\1{2,}/.test(seq), `quiz 正确答案位置有规律（${seq}），需要随机打乱`);
   }
 
   need(p.internalize && isStr(p.internalize.claim) && isStr(p.internalize.apply_template), 'internalize 缺失');
