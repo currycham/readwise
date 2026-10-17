@@ -12,6 +12,7 @@
     "render": "node scripts/render.mjs",
     "check": "node scripts/check.mjs",
     "ping": "node --env-file-if-exists=.env scripts/ping.mjs",
+    "recheck": "node --env-file-if-exists=.env scripts/recheck.mjs",
     "dev": "node --env-file-if-exists=.env server/dev-server.mjs"
   }
 }

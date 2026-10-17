@@ -75,13 +75,13 @@ export const MODELS = {
 
 // 每个环节默认用哪个模型；命令行 --model 只覆盖 generate。
 export const ROLES = {
-  assess: env.ROLE_ASSESS || 'deepseek-flash',   // 未用：打分由生成模型完成（需要判断它是否了解这本书）
+  assess: env.ROLE_ASSESS || 'deepseek-pro',     // 资料充分度打分（资料 + 模型认知交叉验证）
   extract: env.ROLE_EXTRACT || 'deepseek-flash', // 上传原文的分块抽取
-  generate: env.ROLE_GENERATE || 'deepseek-pro', // 生成书页
-  check: env.ROLE_CHECK || 'hy3',                // 质检
-  repair: env.ROLE_REPAIR || 'deepseek-pro',     // 按质检意见修正
+  generate: env.ROLE_GENERATE || 'hy4',          // 生成书页（2026-10 对比：最快、最便宜、内容最充实）
+  check: env.ROLE_CHECK || 'deepseek-pro',       // 质检（与生成模型不同家族，交叉审核）
+  repair: env.ROLE_REPAIR || 'hy4',              // 按质检意见修正（流水线实际使用生成模型）
   ask: env.ROLE_ASK || 'hy3',                    // 问作者
-  podcast: env.ROLE_PODCAST || 'deepseek-pro',   // 播客稿
+  podcast: env.ROLE_PODCAST || 'hy4',            // 播客稿
 };
 
 // 联网搜索：博查 Web Search API（或设 SEARCH_PROVIDER=none 只用模型知识，仅供测试）

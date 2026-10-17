@@ -42,9 +42,10 @@ export async function buildBookPage(o) {
     steps.push({ name: 'search', cost: search.cost, results: search.results.length });
     notes = evidenceText(search);
     log(`检索到 ${search.results.length} 条资料，评估充分度…`);
-    // 用生成模型打分：要判断的是“这个模型是否了解这本书”，并用资料交叉验证
+    // 打分用固定模型（ROLES.assess），保证不同生成模型面对同一个准入标准；
+    // 它判断的是“主力模型是否了解这本书”，并用检索资料交叉验证
     const a = step('assess', await chatJSON({
-      alias: genModel, task: 'assess', book: o.title, maxTokens: 12000,
+      alias: ROLES.assess, task: 'assess', book: o.title, maxTokens: 12000,
       messages: [{ role: 'system', content: P.ASSESS_SYSTEM }, { role: 'user', content: P.assessUser({ title: o.title, author: o.author, evidence: notes }) }],
     }));
     assessment = a.data;

@@ -20,7 +20,7 @@ export async function askAuthor(page, messages, { onDelta, alias = ROLES.ask } =
     alias,
     task: 'ask',
     book: page.book.title,
-    maxTokens: 1200,
+    maxTokens: 4000, // 推理模型先思考再回答，留足额度；回答长度由提示词控制在 150–300 字
     temperature: 0.7,
     onDelta,
     messages: [{ role: 'system', content: askSystem(page) }, ...sanitizeMessages(messages)],

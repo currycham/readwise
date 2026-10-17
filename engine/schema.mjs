@@ -53,7 +53,7 @@ export const PAGE_SHAPE = `{
   "author_persona": {
     "name": "作者名",
     "voice": "作者的说话风格与思维方式，60–120字",
-    "starter_questions": ["读者可以问作者的引导问题1", "问题2", "问题3"]
+    "starter_questions": ["读者向作者提的问题1（第一人称“我”是读者，问的对象是作者，如：我总是……，您会怎么建议？）", "问题2", "问题3"]
   },
   "confidence": {"level": "high / medium / low", "notes": "哪些内容依据充分，哪些属于概括或推断"},
   "sources": [{"title": "来源标题", "url": "来源链接"}]
