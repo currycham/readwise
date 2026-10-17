@@ -6,6 +6,6 @@ export async function POST(req) {
     if (!sameOrigin(req)) return json({ error: '非法请求' }, 403);
     const { phone } = await req.json();
     const r = await requestCode(String(phone || '').trim(), clientIp(req));
-    return json({ ok: true, dev: r.dev });
+    return json({ ok: true, dev: r.dev, devCode: r.devCode });
   } catch (e) { return fail(e); }
 }

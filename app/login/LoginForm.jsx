@@ -16,7 +16,7 @@ export default function LoginForm({ next }) {
       const j = await r.json();
       if (!r.ok) throw new Error(j.error);
       setSent(Date.now());
-      setMsg(j.dev ? '开发模式：验证码已打印在服务端日志里。' : '验证码已发送，5 分钟内有效。');
+      setMsg(j.devCode ? `本地开发模式，验证码：${j.devCode}` : j.dev ? '开发模式：验证码已打印在服务端日志里。' : '验证码已发送，5 分钟内有效。');
     } catch (e) { setErr(e.message); }
     setBusy(false);
   }
