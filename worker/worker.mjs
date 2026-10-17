@@ -52,7 +52,7 @@ async function runPodcast(job) {
   try {
     const page = JSON.parse(book.page_json);
     setProgress(job.id, '编写对谈稿…');
-    const s = await podcastScript(page, { minutes: 30 });
+    const s = await podcastScript(page);
     updateBook(book.id, { podcast_script: JSON.stringify(s.script) });
     const file = dataPath('media', 'podcast', `${book.id}.mp3`);
     const a = await synthesizePodcast(s.script, file, { book: book.title, onProgress: (d, n) => setProgress(job.id, `配音 ${d}/${n}`) });

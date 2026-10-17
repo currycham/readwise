@@ -230,7 +230,7 @@ footer a{color:var(--muted)}
 
     <div class="box pod" id="podcast">
       <div class="label">先听一遍 · 双人播客</div>
-      <p class="how" id="podInfo">用 30 分钟的对谈建立全书的整体印象，再进入下面的限时精读。</p>
+      <p class="how" id="podInfo">用 15–20 分钟的对谈建立全书的整体印象，再进入下面的限时精读。</p>
       <audio id="podAudio" controls preload="none" hidden></audio>
       <div class="ctrl"><button class="btn primary sm" id="podBtn">生成并收听</button><span class="readout" id="podState"></span></div>
       <div class="transcript" id="podScript" hidden></div>
@@ -498,7 +498,7 @@ function podStatus(j){
   if(j.script&&j.script.segments)showScript(j.script);
   if(j.url){showAudio(j.url,j.ms);clearTimeout(podTimer);return}
   if(j.status==='queued'||j.status==='running'){
-    $('#podBtn').disabled=true;$('#podState').innerHTML=`<span>正在生成播客：${esc(j.progress||'排队中')}。大约需要 5 分钟，生成好后所有人都能收听。</span>`;
+    $('#podBtn').disabled=true;$('#podState').innerHTML=`<span>正在生成播客：${esc(j.progress||'排队中')}。大约需要 10 分钟，生成好后所有人都能收听。</span>`;
     clearTimeout(podTimer);podTimer=setTimeout(pollPod,5000);return}
   if(j.status==='failed'){$('#podBtn').disabled=false;$('#podBtn').textContent='重新生成';$('#podState').textContent='上次生成失败了，可以再试一次。';return}
   if(j.chars&&!j.status){$('#podState').textContent=`文稿约 ${j.chars} 字。`}
@@ -507,7 +507,7 @@ async function pollPod(){try{const r=await fetch(API+'/api/podcast?slug='+encode
 if(SITE&&SITE.podcast){
   if(SITE.podcast.status==='ready'){showAudio(SITE.podcast.url,SITE.podcast.ms);if(B.podcast&&B.podcast.script)showScript(B.podcast.script)}
   else if(SITE.podcast.status==='queued'||SITE.podcast.status==='running'){pollPod()}
-  else{$('#podBtn').textContent=SITE.podcast.status==='failed'?'重新生成':'生成并收听';$('#podInfo').textContent='这本书还没有播客。点一下生成（约 5 分钟），生成好后所有人都能收听。'}
+  else{$('#podBtn').textContent=SITE.podcast.status==='failed'?'重新生成':'生成并收听';$('#podInfo').textContent='这本书还没有播客。点一下生成（约 10 分钟），生成好后所有人都能收听。'}
 }else if(B.podcast&&B.podcast.script){showScript(B.podcast.script);$('#podBtn').textContent='重新生成'}
 $('#podBtn').onclick=async()=>{
   if(!API&&location.protocol==='file:'){$('#podState').textContent='播客需要在服务端生成，请通过网站打开本页。';return}

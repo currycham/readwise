@@ -64,7 +64,7 @@ npm run worker                # 另开一个终端：后台任务进程（生成
 | `npm run generate -- "某本书" --file 原文.pdf` | 资料不足时用原文生成（txt / pdf / epub） |
 | `npm run generate -- "原子习惯" --model hy4` | 指定生成模型（alias 见 `config/models.mjs`） |
 | `npm run compare -- --models deepseek-pro,hy4,qwen-max` | 用测试书单（`config/eval-books.mjs`）对比多个模型，输出 `out/compare/*.html` 报告 |
-| `npm run podcast-script -- out/books/原子习惯/deepseek-pro.json` | 为书页写 30 分钟双人播客稿 |
+| `npm run podcast-script -- out/books/原子习惯/deepseek-pro.json` | 为书页写 15–20 分钟双人播客稿（时长见 `PODCAST_MINUTES`） |
 | `npm run render -- fixtures/最小阻力之路.json` | 把书页 JSON 渲染成单个 HTML |
 | `npm run check -- 书页.json` | 只做结构校验 |
 

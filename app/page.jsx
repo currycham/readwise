@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
 
 const FLOW = [
   ['先看', '推荐', '一句话说清这本书解决什么问题、值不值得读。'],
-  ['30′', '双人播客', '两位主持人对谈，先建立整体印象。'],
+  ['15′', '双人播客', '两位主持人对谈，先建立整体印象。'],
   ['5′', '检视', '书的类型、要解决的问题、全书结构图。'],
   ['40′', '分析', '8–10 个知识块，论述、术语、例子、误解、回忆题。'],
   ['5′', '检测', '12 道快问快答，概念题和情境题混合。'],
@@ -34,7 +34,7 @@ export default async function Home() {
             <div className="label">Readwise · 书籍精读回顾</div>
             <h1>60 分钟，<em>吃透</em>一本书</h1>
             <p className="lead">
-              输入书名，生成一份按<b>《如何阅读一本书》</b>和<b>《学习之道》</b>设计的精读手册：先听 30 分钟播客，再限时精读、检测、内化，读完还能<b>向作者提问</b>。
+              输入书名，生成一份按<b>《如何阅读一本书》</b>和<b>《学习之道》</b>设计的精读手册：先听 15 分钟播客，再限时精读、检测、内化，读完还能<b>向作者提问</b>。
             </p>
             <SearchBox loggedIn={!!user} />
             <div className="meta">
@@ -49,7 +49,7 @@ export default async function Home() {
             <div className="pv-title">被讨厌的勇气</div>
             <div className="muted small">岸见一郎　古贺史健 · <span className="db">豆瓣 8.6</span></div>
             <div className="pv-rec"><b>没读过？先看这里</b>帮你摆脱对认可的执念，在人际关系里获得自由。</div>
-            <div className="pv-pod"><span className="play" /><span>双人播客 · 30 分钟</span><span className="wave" /></div>
+            <div className="pv-pod"><span className="play" /><span>双人播客 · 18 分钟</span><span className="wave" /></div>
             <div className="pv-chunk"><b>块 4　课题分离</b><br />分清哪些是自己的课题、哪些是别人的课题，不干涉，也不被干涉。</div>
             <div className="pv-q"><span>A. 讨好上司</span><span className="r">B. 分清课题</span><span>C. 回避冲突</span><span>D. 压抑情绪</span></div>
             <div className="pv-ask"><p className="u">我总担心领导怎么看我，怎么办？</p><p className="a">领导怎么评价你，是他的课题。你的课题是……</p></div>

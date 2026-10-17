@@ -97,6 +97,9 @@ export const SEARCH = {
 // 资料充分度门槛（0–9 分，见 engine/prompts.mjs 的打分规则）
 export const EVIDENCE_THRESHOLD = Number(env.EVIDENCE_THRESHOLD || 6);
 
+// 播客目标时长（分钟）。实际成稿在 15–20 分钟之间；语音合成成本与时长成正比（30 分钟约 ¥3）
+export const PODCAST_MINUTES = Number(env.PODCAST_MINUTES || 18);
+
 // 播客语音合成：腾讯云 TokenHub 上的 MiniMax 同步语音合成（单次 ≤ 1 万字符，中文每字按 2 个字符计费）
 export const TTS = {
   url: (env.TOKENHUB_BASE_URL || 'https://tokenhub.tencentmaas.com/v1').replace(/\/$/, '') + '/wand/minimax-tts/sync_tts',

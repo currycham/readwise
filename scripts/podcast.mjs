@@ -1,14 +1,14 @@
-// 为书页生成完整播客（稿 + 语音）：npm run podcast -- out/books/xxx/hy4.json [--minutes 30]
+// 为书页生成完整播客（稿 + 语音）：npm run podcast -- out/books/xxx/hy4.json [--minutes 18]
 import { readFile, writeFile } from 'node:fs/promises';
 import { podcastScript, synthesizePodcast } from '../engine/podcast.mjs';
 import { parseArgs } from './args.mjs';
 
 const { pos, opt } = parseArgs();
-if (!pos[0]) { console.error('用法：npm run podcast -- 书页.json [--minutes 30]'); process.exit(1); }
+if (!pos[0]) { console.error('用法：npm run podcast -- 书页.json [--minutes 18]'); process.exit(1); }
 const page = JSON.parse(await readFile(pos[0], 'utf8'));
 const t0 = Date.now();
 console.log('写稿…');
-const s = await podcastScript(page, { minutes: Number(opt.minutes || 30) });
+const s = await podcastScript(page, { minutes: opt.minutes ? Number(opt.minutes) : undefined });
 console.log(`稿件 ${s.chars} 字，约 ${s.estMinutes} 分钟，¥${s.cost.toFixed(2)}，${Math.round(s.ms / 1000)} 秒`);
 await writeFile(pos[0].replace(/\.json$/, '.podcast.json'), JSON.stringify(s, null, 2));
 const out = pos[0].replace(/\.json$/, '.mp3');

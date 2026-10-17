@@ -1,9 +1,9 @@
-// 播客：先由大模型写双人对谈稿，再交给语音合成（TTS 接口待接入，见 README）。
-import { ROLES } from '../config/models.mjs';
+// 播客：先由大模型写双人对谈稿，再交给语音合成（engine/tts.mjs）。
+import { PODCAST_MINUTES, ROLES } from '../config/models.mjs';
 import { chatJSON } from './llm.mjs';
 import { PODCAST_SYSTEM, podcastUser } from './prompts.mjs';
 
-export async function podcastScript(page, { minutes = 30, alias = ROLES.podcast } = {}) {
+export async function podcastScript(page, { minutes = PODCAST_MINUTES, alias = ROLES.podcast } = {}) {
   const chars = minutes * 300;
   const r = await chatJSON({
     alias,
@@ -11,7 +11,7 @@ export async function podcastScript(page, { minutes = 30, alias = ROLES.podcast 
     book: page.book.title,
     temperature: 0.8,
     messages: [
-      { role: 'system', content: PODCAST_SYSTEM.replace('{minutes}', minutes).replace('{chars}', chars).replace('{perChunk}', Math.round((chars - 800) / page.chunks.length)) },
+      { role: 'system', content: PODCAST_SYSTEM.replace('{minutes}', minutes).replace('{chars}', chars).replace('{perChunk}', Math.round((chars - 600) / page.chunks.length)) },
       { role: 'user', content: podcastUser(page) },
     ],
   });
