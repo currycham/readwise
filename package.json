@@ -1,0 +1,16 @@
+{
+  "name": "readwise",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Readwise：书籍精读学习页内容引擎：检索打分、生成、质检、渲染、问作者、播客稿",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "generate": "node --env-file-if-exists=.env scripts/generate.mjs",
+    "compare": "node --env-file-if-exists=.env scripts/compare.mjs",
+    "podcast-script": "node --env-file-if-exists=.env scripts/podcast-script.mjs",
+    "render": "node scripts/render.mjs",
+    "check": "node scripts/check.mjs",
+    "dev": "node --env-file-if-exists=.env server/dev-server.mjs"
+  }
+}

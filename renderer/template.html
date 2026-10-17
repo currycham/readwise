@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title><!--TITLE--> 精读手册</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;800&family=Noto+Sans+SC:wght@400;500;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: one reading column under a sticky timed-step bar. River-slate neutrals, teal for progress, amber for tension and overtime. */
+:root{
+  --bg:#EDF1F0; --surface:#F9FBFA; --ink:#15242A; --muted:#55696D; --line:#C9D5D3;
+  --accent:#0D6866; --accent-ink:#FFFFFF; --accent-soft:#D3E8E5;
+  --tension:#B26E15; --tension-soft:#F3E2C8;
+  --ok:#2B7A4B; --ok-soft:#DBEEE1; --bad:#AF3A36; --bad-soft:#F5DDDA;
+  --f-display:"Noto Serif SC","Songti SC","STSong",serif;
+  --f-body:"Noto Sans SC","PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  --r:10px; color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E1618; --surface:#152023; --ink:#E1EAE8; --muted:#93A7A9; --line:#2A3B3E;
+  --accent:#4FB5AB; --accent-ink:#0B1A1B; --accent-soft:#163A3A;
+  --tension:#E3A452; --tension-soft:#3A2C17;
+  --ok:#5CC489; --ok-soft:#163427; --bad:#EE7C74; --bad-soft:#3E201E; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1618; --surface:#152023; --ink:#E1EAE8; --muted:#93A7A9; --line:#2A3B3E;
+  --accent:#4FB5AB; --accent-ink:#0B1A1B; --accent-soft:#163A3A;
+  --tension:#E3A452; --tension-soft:#3A2C17;
+  --ok:#5CC489; --ok-soft:#163427; --bad:#EE7C74; --bad-soft:#3E201E; color-scheme:dark}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.75;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+[hidden]{display:none!important}
+h1,h2,h3,h4{font-family:var(--f-display);text-wrap:balance;line-height:1.3;margin:0}
+p{margin:0}
+button,input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:780px;margin:0 auto;display:flex;flex-direction:column;gap:64px;padding-block:36px 80px}
+.label{font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.how{color:var(--muted);font-size:14px}
+
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line);
+  margin:0 calc(-1*max(16px,env(safe-area-inset-left,0px)));padding:10px max(16px,env(safe-area-inset-left,0px))}
+.bar .in{max-width:780px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center}
+.bar ol{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:5fr 40fr 5fr 10fr;gap:4px}
+.bar a{display:flex;flex-direction:column;gap:3px;text-decoration:none;color:var(--muted);font-size:12px;line-height:1.25;min-width:0}
+.bar a i{display:block;height:5px;border-radius:3px;background:var(--line)}
+.bar a.cur{color:var(--ink)} .bar a.cur i{background:var(--tension)}
+.bar a.done{color:var(--ink)} .bar a.done i{background:var(--accent)}
+.bar a span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.clock{display:flex;align-items:center;gap:8px}
+.clock .t{font-family:var(--f-mono);font-size:20px;font-variant-numeric:tabular-nums;min-width:4.6em;text-align:right}
+.clock .t.over{color:var(--tension)}
+.clock .s{font-size:12px;color:var(--muted);text-align:right;line-height:1.2}
+
+.hero{display:flex;flex-direction:column;gap:14px}
+.hero h1{font-size:clamp(38px,7vw,60px);font-weight:800;letter-spacing:.02em}
+.hero .by{color:var(--muted)}
+.motto{font-family:var(--f-display);font-weight:600;font-size:clamp(20px,2.8vw,26px);line-height:1.55;text-wrap:balance;border-left:3px solid var(--tension);padding-left:16px}
+.motto span{display:block;font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;color:var(--muted);font-weight:500;margin-top:4px}
+.box{display:flex;flex-direction:column;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px}
+.box p{font-size:15px}
+.rec .one{font-family:var(--f-display);font-weight:600;font-size:18px}
+.rec ol{margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:2px}
+.rec dl{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:4px 12px;margin:0;font-size:15px}
+.rec dt{color:var(--muted)} .rec dd{margin:0}
+.rules{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.rules div{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;font-size:14px}
+.rules b{font-family:var(--f-display);display:block;font-size:15px}
+.cats{display:flex;flex-wrap:wrap;gap:6px}
+
+section{display:flex;flex-direction:column;gap:18px;scroll-margin-top:84px}
+section > header{display:flex;flex-direction:column;gap:6px}
+section h2{font-size:clamp(24px,3.4vw,30px)}
+.shead{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px}
+.btn{border:1px solid var(--line);background:var(--surface);padding:6px 14px;border-radius:8px;cursor:pointer;font-size:14px;line-height:1.5}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.sm{padding:3px 10px;font-size:13px}
+.btn:disabled{opacity:.45;cursor:default}
+.finish{align-self:flex-start}
+.finish[aria-pressed="true"]{background:var(--ok-soft);border-color:var(--ok);color:var(--ok)}
+textarea{width:100%;min-height:76px;border:1px solid var(--line);border-radius:8px;background:var(--bg);padding:10px 12px;resize:vertical;line-height:1.6}
+.chip{display:inline-block;font-size:12px;padding:1px 8px;border-radius:99px;background:var(--accent-soft);color:var(--accent);font-weight:500}
+.chip.t{background:var(--tension-soft);color:var(--tension)}
+.pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+
+.map{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.map .top{grid-column:1/-1;text-align:center;font-family:var(--f-display);font-weight:600;font-size:17px;padding:10px;border:1px solid var(--ink);border-radius:var(--r)}
+.map .col{display:flex;flex-direction:column;gap:5px;padding:12px;border-radius:var(--r)}
+.map .col.l{background:var(--tension-soft)} .map .col.r{background:var(--accent-soft)}
+.map .col h3{font-size:15px}
+.map .col.l h3{color:var(--tension)} .map .col.r h3{color:var(--accent)}
+.map .node{background:var(--surface);border-radius:8px;padding:5px 10px;font-size:14px}
+.map .node a{color:var(--muted);font-size:12px;text-decoration:none;margin-left:4px}
+.map .arr{text-align:center;color:var(--muted);font-size:11px;line-height:1}
+.map .sw{grid-column:1/-1;text-align:center;font-size:14px;color:var(--muted)}
+
+.chunk{display:flex;flex-direction:column;gap:16px;scroll-margin-top:84px}
+.chunk .head{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap}
+.chunk .head .k{font-family:var(--f-mono);font-size:12px;color:var(--tension)}
+.chunk .head h3{font-size:22px;flex:1;min-width:10em}
+.chunk .head .m{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.chunk .one{font-family:var(--f-display);font-weight:600;font-size:17px;border-left:3px solid var(--tension);padding-left:12px}
+.blk{display:flex;flex-direction:column;gap:6px}
+.core{display:flex;flex-direction:column;gap:8px}
+.terms{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:6px 14px;margin:0;font-size:15px}
+.terms dt{font-weight:700;font-family:var(--f-display)}
+.terms dd{margin:0}
+.chain{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center;font-size:14px}
+.chain span{background:var(--bg);border-radius:6px;padding:3px 8px}
+.chain em{font-style:normal;color:var(--muted)}
+.ex,.myth{font-size:15px;border-radius:8px;padding:10px 12px}
+.ex{background:var(--bg)}
+.myth{background:var(--tension-soft)}
+.myth b{color:var(--tension)}
+.rc{display:flex;flex-direction:column;gap:8px;border-top:1px dashed var(--line);padding-top:14px}
+.rq{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 10px;align-items:start}
+.rq .q{font-weight:500;font-size:15px}
+.rq .a{grid-column:1/-1;font-size:14px;color:var(--muted);background:var(--bg);border-radius:8px;padding:8px 12px}
+
+.cloze{display:flex;flex-direction:column;gap:10px;margin:0;padding-left:1.4em}
+.cloze li{line-height:2}
+.blank{border:0;border-bottom:2px solid var(--tension);background:var(--tension-soft);border-radius:4px 4px 0 0;padding:0 8px;cursor:pointer;color:transparent;min-width:4em;font-size:15px}
+.blank.on{color:var(--ink);background:var(--accent-soft);border-bottom-color:var(--accent);cursor:default}
+
+.qlist{display:flex;flex-direction:column;gap:10px}
+.qq{display:flex;flex-direction:column;gap:8px;padding:16px}
+.qq .stem{font-weight:500}
+.qq .qn{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.opt{text-align:left;border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:6px 10px;cursor:pointer;line-height:1.5;font-size:15px}
+.opt:hover:not(:disabled){border-color:var(--accent)}
+.opt:disabled{cursor:default}
+.opt.right{background:var(--ok-soft);border-color:var(--ok)}
+.opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+.explain{font-size:14px;background:var(--bg);border-radius:8px;padding:8px 12px}
+.score{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.score .big{font-family:var(--f-mono);font-size:26px;font-variant-numeric:tabular-nums}
+
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-weight:500}
+.field small{color:var(--muted);font-size:13px}
+.seg{display:flex;flex-wrap:wrap;gap:4px}
+.seg button{border:1px solid var(--line);background:var(--bg);border-radius:6px;padding:3px 12px;font-size:14px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.sheet{white-space:pre-wrap;font-size:14px;background:var(--bg);border-radius:8px;padding:14px;line-height:1.7}
+.log{font-family:var(--f-mono);font-size:13px;font-variant-numeric:tabular-nums;color:var(--muted)}
+.ctrl{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.readout{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:13px;color:var(--muted)}
+
+/* podcast */
+.pod{display:flex;flex-direction:column;gap:10px}
+.pod audio{width:100%}
+.transcript{max-height:360px;overflow:auto;display:flex;flex-direction:column;gap:6px;font-size:14px;background:var(--bg);border-radius:8px;padding:12px}
+.transcript b{font-family:var(--f-mono);font-size:12px;color:var(--accent);margin-right:6px}
+.transcript h4{font-size:14px;margin-top:8px;color:var(--tension)}
+
+/* ask */
+.ask{display:flex;flex-direction:column;gap:12px}
+.ai-tag{display:inline-block;font-size:12px;padding:1px 8px;border-radius:99px;border:1px solid var(--tension);color:var(--tension)}
+.msgs{display:flex;flex-direction:column;gap:10px}
+.msg{max-width:88%;padding:10px 14px;border-radius:12px;font-size:15px;white-space:pre-wrap}
+.msg.u{align-self:flex-end;background:var(--accent);color:var(--accent-ink)}
+.msg.a{align-self:flex-start;background:var(--surface);border:1px solid var(--line)}
+.msg.err{border-color:var(--bad);color:var(--bad)}
+.starters{display:flex;flex-direction:column;gap:6px}
+.starters button{text-align:left;border:1px dashed var(--accent);background:var(--surface);border-radius:8px;padding:8px 12px;cursor:pointer;font-size:14px}
+.askrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:end}
+.askrow textarea{min-height:52px}
+
+footer{color:var(--muted);font-size:13px;display:flex;flex-direction:column;gap:6px}
+footer a{color:var(--muted)}
+
+@media (max-width:640px){
+  .bar .in{grid-template-columns:minmax(0,1fr)}
+  .clock{justify-content:space-between}
+  .rules,.pair,.map,.opts{grid-template-columns:minmax(0,1fr)}
+  .terms,.rec dl{grid-template-columns:minmax(0,1fr)} .terms dd{margin-bottom:6px}
+  .msg{max-width:100%}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<script type="application/json" id="book-data"><!--BOOK_DATA--></script>
+
+<div class="bar">
+  <div class="in">
+    <nav aria-label="学习步骤"><ol id="nav"></ol></nav>
+    <div class="clock">
+      <div><div class="s" id="clkStep">未开始</div><div class="s" id="clkTotal">总用时 0:00 / 60:00</div></div>
+      <div class="t" id="clk">--:--</div>
+      <button class="btn sm" id="clkBtn" disabled>暂停</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="hero">
+    <div class="label" id="enTitle"></div>
+    <h1 id="title"></h1>
+    <p class="by" id="by"></p>
+    <div class="cats" id="cats"></div>
+
+    <div class="box rec" aria-label="推荐">
+      <div class="label">没读过？先看这里</div>
+      <p class="one" id="recOne"></p>
+      <ol id="recReasons"></ol>
+      <dl id="recDl"></dl>
+    </div>
+
+    <p class="motto" id="motto"></p>
+
+    <div class="box">
+      <div class="label">为什么这样重读</div>
+      <p id="whyReread"></p>
+    </div>
+
+    <div class="box pod" id="podcast">
+      <div class="label">先听一遍 · 双人播客</div>
+      <p class="how" id="podInfo">用 30 分钟的对谈建立全书的整体印象，再进入下面的限时精读。</p>
+      <audio id="podAudio" controls preload="none" hidden></audio>
+      <div class="ctrl"><button class="btn primary sm" id="podBtn">生成并收听</button><span class="readout" id="podState"></span></div>
+      <div class="transcript" id="podScript" hidden></div>
+    </div>
+
+    <p class="by">60 分钟吃透全书：检视 5′ → 分析 40′ → 检测 5′ → 批判与内化 10′</p>
+    <div class="rules">
+      <div><b>四个问题串起全程</b>《如何阅读一本书》：整体在谈什么？细节怎么说？有道理吗？与我何干？四步依次回答。</div>
+      <div><b>限时是要求，不是参考</b>每步点“开始计时”。超时会变成琥珀色，完成时记录用时。时间不够就略读，别停下。</div>
+      <div><b>先回想，再看答案</b>《学习之道》：主动回忆远胜重读。每块末尾的问题先在心里答出来，再点“显示”。</div>
+      <div><b>组块，再串联</b>每块约 4 分钟，最后用填空把它们串成一条论证链。</div>
+    </div>
+  </div>
+
+  <section id="s1">
+    <header>
+      <div class="label">第 1 步 · 检视阅读 · 5 分钟 · 整体在谈什么？</div>
+      <div class="shead"><h2>全书骨架</h2><button class="btn primary sm" data-start="0">开始计时 5:00</button></div>
+    </header>
+    <div class="pair">
+      <div class="card"><div class="label">书的类型</div><p style="margin-top:6px" id="bookType"></p></div>
+      <div class="card"><div class="label">作者要解决的问题</div><p style="margin-top:6px" id="problem"></p></div>
+    </div>
+    <div class="card" style="display:flex;flex-direction:column;gap:8px">
+      <label for="unity" style="font-weight:500">限 1 分钟：用一句话写出全书主旨</label>
+      <textarea id="unity" placeholder="这本书在说……"></textarea>
+      <div class="rq"><span class="how">写完再对照。</span><button class="btn sm" data-show="unityRef">显示参考</button>
+        <p class="a" id="unityRef" hidden></p></div>
+    </div>
+    <div class="map" id="map" aria-label="全书结构图"></div>
+    <button class="btn finish" data-finish="0" aria-pressed="false">完成第 1 步</button>
+  </section>
+
+  <section id="s2">
+    <header>
+      <div class="label">第 2 步 · 分析阅读 · 40 分钟 · 细节说了什么、怎么说的？</div>
+      <div class="shead"><h2 id="chunksTitle">知识块</h2><button class="btn primary sm" data-start="1">开始计时 40:00</button></div>
+      <p class="how">每块约 4 分钟：读一句话核心和论述，确认术语，看论证与例子，最后完成主动回忆。最后 4 分钟做论证链填空。</p>
+    </header>
+    <div id="chunks" style="display:flex;flex-direction:column;gap:16px"></div>
+    <div class="card" style="display:flex;flex-direction:column;gap:12px">
+      <div class="label">串联 · 4 分钟</div>
+      <h3 style="font-size:22px">全书论证链填空</h3>
+      <p class="how">先在心里说出空格里的词，再点空格揭晓。</p>
+      <ol class="cloze" id="cloze"></ol>
+      <div class="ctrl"><span class="readout" id="clozeN"></span><button class="btn sm" id="clozeReset">全部盖回</button></div>
+    </div>
+    <button class="btn finish" data-finish="1" aria-pressed="false">完成第 2 步</button>
+  </section>
+
+  <section id="s3">
+    <header>
+      <div class="label">第 3 步 · 检测 · 5 分钟 · 交错练习</div>
+      <div class="shead"><h2>12 道快问快答</h2><button class="btn primary sm" data-start="2">开始计时 5:00</button></div>
+      <p class="how">每题不超过 25 秒，凭第一反应作答。错题的解释会告诉你回哪一块。</p>
+    </header>
+    <div class="card score">
+      <div><div class="label">得分</div><div class="big" id="qscore">0 / 12</div></div>
+      <button class="btn" id="qwrong">只看错题</button>
+      <button class="btn" id="qreset">重做</button>
+    </div>
+    <div class="qlist" id="quiz"></div>
+    <button class="btn finish" data-finish="2" aria-pressed="false">完成第 3 步</button>
+  </section>
+
+  <section id="s4">
+    <header>
+      <div class="label">第 4 步 · 批判与内化 · 10 分钟 · 有道理吗？与我何干？</div>
+      <div class="shead"><h2>变成你自己的</h2><button class="btn primary sm" data-start="3">开始计时 10:00</button></div>
+      <p class="how">每题约 3 分钟。写短句就好。写完下面会自动生成你的一页笔记。</p>
+    </header>
+    <div class="card" style="display:flex;flex-direction:column;gap:20px">
+      <div class="field">
+        <label id="claimLabel"></label>
+        <small>《如何阅读一本书》：不同意时要说出依据：作者知识不足、知识有误、推理不合逻辑，或分析不完整。也可以暂缓判断。</small>
+        <div class="seg" id="stance"></div>
+        <textarea id="w1" aria-label="表态理由" placeholder="理由……"></textarea>
+      </div>
+      <div class="field"><label for="w2">2. 讲给朋友听</label><small>不用书中术语，三四句大白话说清这本书。说不清的地方，就是还没懂的地方。</small><textarea id="w2"></textarea></div>
+      <div class="field"><label for="w3">3. 与我何干：用在一件事上</label><small>挑一件你真正想做的事，按模板写。</small><textarea id="w3"></textarea></div>
+    </div>
+    <div class="card" style="display:flex;flex-direction:column;gap:10px">
+      <div class="label">我的一页笔记</div>
+      <div class="sheet" id="sheet"></div>
+      <div class="ctrl"><button class="btn primary" id="copy">复制笔记</button><span class="readout" id="copied"></span></div>
+    </div>
+    <button class="btn finish" data-finish="3" aria-pressed="false">完成第 4 步</button>
+  </section>
+
+  <section id="ask">
+    <header>
+      <div class="label">延伸思考 · 不限时</div>
+      <div class="shead"><h2 id="askTitle">你有什么想问作者？</h2><span class="ai-tag">AI 模拟，非作者本人观点</span></div>
+      <p class="how">用书里的思路聊聊你自己的处境，或者追问你没想通的地方。</p>
+    </header>
+    <div class="card ask">
+      <div class="msgs" id="msgs" aria-live="polite"></div>
+      <div class="starters" id="starters"></div>
+      <div class="askrow"><textarea id="askInput" aria-label="你的问题" placeholder="写下你的问题……"></textarea><button class="btn primary" id="askSend">发送</button></div>
+      <p class="readout" id="askState"></p>
+    </div>
+  </section>
+
+  <section id="s5">
+    <header><div class="label">用时记录</div><h2>你和时间约束</h2></header>
+    <div class="card" style="display:flex;flex-direction:column;gap:8px">
+      <div class="log" id="log"></div>
+      <p class="how">间隔复习：第 2 天、第 7 天、第 30 天各回来一次，只做论证链填空和第 3 步检测，目标 10 分钟内全对。</p>
+      <div><button class="btn sm" id="logReset">清空计时记录</button></div>
+    </div>
+  </section>
+
+  <footer id="footer"></footer>
+</div>
+
+<script>
+(function(){
+const B=JSON.parse(document.getElementById('book-data').textContent);
+const SLUG=B.meta&&B.meta.slug||B.book.title;
+const API=window.BOOK_API||'';
+const KEY='book-'+SLUG+'-v1';
+let S={};
+try{S=JSON.parse(localStorage.getItem(KEY)||'{}')||{}}catch(e){S={}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+S.fin=S.fin||{};S.used=S.used||{};S.quiz=S.quiz||{};S.cz=S.cz||{};S.w=S.w||{};S.chat=S.chat||[];
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const mmss=s=>{const a=Math.abs(Math.round(s));return Math.floor(a/60)+':'+String(a%60).padStart(2,'0')};
+
+/* ---------- hero ---------- */
+const bk=B.book;
+document.title=bk.title+' 精读手册';
+$('#title').textContent=bk.title;
+$('#enTitle').textContent=[bk.original_title,bk.author_en].filter(Boolean).join(' · ')||'精读手册';
+$('#by').textContent=bk.author+' 著';
+$('#cats').innerHTML=(bk.categories||[]).map(c=>`<span class="chip">${esc(c.top)} · ${esc(c.sub)}</span>`).join('');
+const R=B.recommend;
+$('#recOne').textContent=R.one_line;
+$('#recReasons').innerHTML=R.reasons.map(r=>`<li>${esc(r)}</li>`).join('');
+$('#recDl').innerHTML=`<dt>适合</dt><dd>${esc(R.for_whom)}</dd><dt>不适合</dt><dd>${esc(R.not_for)}</dd><dt>读完你会</dt><dd>${esc(R.gains)}</dd>`;
+$('#motto').innerHTML=`${esc(B.motto.text)}<span>${B.motto.source==='quote'?'原书语句':'本书主旨提炼'}</span>`;
+$('#whyReread').textContent=B.why_reread;
+
+/* ---------- step 1 ---------- */
+$('#bookType').textContent=B.inspect.book_type;
+$('#problem').textContent=B.inspect.problem;
+$('#unityRef').textContent=B.inspect.unity;
+const M=B.inspect.map;
+const col=(side,cls)=>`<div class="col ${cls}"><h3>${esc(side.title)}</h3>${side.nodes.map((n,i)=>`${i?'<div class="arr">↓</div>':''}<div class="node">${esc(n.text)}<a href="#c${n.chunk}">块 ${n.chunk}</a></div>`).join('')}</div>`;
+$('#map').innerHTML=`<div class="top">${esc(M.top)}</div>${col(M.left,'l')}${col(M.right,'r')}<div class="sw">${esc(M.bridge)}</div>`;
+
+/* ---------- steps & timer ---------- */
+const STEPS=[['s1','检视',5],['s2','分析',40],['s3','检测',5],['s4','内化',10]];
+let T={step:null,elapsed:0,running:false,last:0};
+const stepElapsed=()=>T.elapsed+(T.running?(Date.now()-T.last)/1000:0);
+function renderNav(){
+  $('#nav').innerHTML=STEPS.map(([id,t,m],i)=>`<li style="min-width:0"><a href="#${id}" class="${S.fin[i]?'done':T.step===i?'cur':''}"><i></i><span>${t} ${S.fin[i]?'✓':m+'′'}</span></a></li>`).join('');
+  document.querySelectorAll('[data-finish]').forEach(b=>{const i=+b.dataset.finish,on=!!S.fin[i];b.setAttribute('aria-pressed',on);
+    b.textContent=on?`✓ 已完成 · 用时 ${mmss(S.used[i]||0)} / ${STEPS[i][2]}:00`:`完成第 ${i+1} 步`});
+  document.querySelectorAll('[data-start]').forEach(b=>{const i=+b.dataset.start;b.textContent=T.step===i?'计时中…':(S.fin[i]?'重新计时 ':'开始计时 ')+STEPS[i][2]+':00';b.disabled=T.step===i});
+  const lines=STEPS.map(([id,t,m],i)=>{const u=S.used[i];if(u==null)return `${t}  —     / ${m}:00`;const d=u-m*60;return `${t}  ${mmss(u).padStart(5)} / ${m}:00  ${d>0?'超时 +'+mmss(d):'节省 '+mmss(-d)}`});
+  const tot=Object.values(S.used).reduce((a,b)=>a+b,0);
+  $('#log').innerHTML=lines.map(esc).join('<br>')+`<br>合计  ${mmss(tot)} / 60:00`;
+}
+function tick(){
+  const tot=Object.values(S.used).reduce((a,b)=>a+b,0)+(T.step!=null&&!S.fin[T.step]?stepElapsed():0);
+  $('#clkTotal').textContent=`总用时 ${mmss(tot)} / 60:00`;
+  if(T.step==null){$('#clk').textContent='--:--';return}
+  const left=STEPS[T.step][2]*60-stepElapsed();
+  const el=$('#clk');el.textContent=(left<0?'+':'')+mmss(left);el.classList.toggle('over',left<0);
+  $('#clkStep').textContent=`第 ${T.step+1} 步 · ${left<0?'已超时':'剩余'}`;
+}
+setInterval(tick,500);
+document.addEventListener('click',e=>{
+  const st=e.target.closest('[data-start]');
+  if(st){const i=+st.dataset.start;T={step:i,elapsed:0,running:true,last:Date.now()};S.fin[i]=false;delete S.used[i];save();
+    $('#clkBtn').disabled=false;$('#clkBtn').textContent='暂停';renderNav();tick();return}
+  const f=e.target.closest('[data-finish]');
+  if(f){const i=+f.dataset.finish;
+    if(S.fin[i]){S.fin[i]=false;save();renderNav();return}
+    S.fin[i]=true;if(T.step===i){S.used[i]=stepElapsed();T={step:null,elapsed:0,running:false,last:0};$('#clkBtn').disabled=true}
+    save();renderNav();tick();
+    const nx=document.getElementById(STEPS[i+1]?STEPS[i+1][0]:'ask');nx&&nx.scrollIntoView({block:'start'});return}
+  const b=e.target.closest('[data-show]');
+  if(b){const t=document.getElementById(b.dataset.show);t.hidden=!t.hidden;b.textContent=t.hidden?(b.dataset.lbl||'显示参考'):'收起'}
+});
+$('#clkBtn').onclick=()=>{if(T.step==null)return;
+  if(T.running){T.elapsed=stepElapsed();T.running=false;$('#clkBtn').textContent='继续'}
+  else{T.running=true;T.last=Date.now();$('#clkBtn').textContent='暂停'}};
+$('#logReset').onclick=()=>{S.used={};S.fin={};T={step:null,elapsed:0,running:false,last:0};$('#clkBtn').disabled=true;save();renderNav();tick()};
+$('#unity').value=S.unity||'';$('#unity').addEventListener('input',e=>{S.unity=e.target.value;save();sheet()});
+
+/* ---------- chunks ---------- */
+const C=B.chunks,N=C.length;
+$('#chunksTitle').textContent=['','','','','','','','','八','九','十'][N]+'个知识块';
+$('#chunks').innerHTML=C.map((c,i)=>`<article class="card chunk" id="c${i+1}">
+  <div class="head"><span class="k">块 ${i+1} / ${N}</span><h3>${esc(c.title)}</h3><span class="m">≈4′</span></div>
+  <p class="one">${esc(c.one)}</p>
+  <div class="blk"><div class="label">核心论述</div><div class="core">${c.core.map(p=>`<p>${esc(p)}</p>`).join('')}</div></div>
+  <div class="blk"><div class="label">关键术语</div><dl class="terms">${c.terms.map(t=>`<dt>${esc(t.term)}</dt><dd>${esc(t.def)}</dd>`).join('')}</dl></div>
+  ${c.arg&&c.arg.length?`<div class="blk"><div class="label">论证链</div><div class="chain">${c.arg.map(a=>`<span>${esc(a)}</span>`).join('<em>→</em>')}</div></div>`:''}
+  <div class="ex"><span class="chip">例子</span> ${esc(c.example)}</div>
+  <div class="myth"><b>容易误解：</b>${esc(c.myth)}</div>
+  <div class="rc"><div class="label">主动回忆 · 先在心里答，再显示</div>
+    ${c.recall.map((r,j)=>`<div class="rq"><span class="q">${esc(r.q)}</span><button class="btn sm" data-show="r${i}_${j}" data-lbl="显示">显示</button><p class="a" id="r${i}_${j}" hidden>${esc(r.a)}</p></div>`).join('')}
+  </div></article>`).join('');
+
+/* ---------- cloze ---------- */
+let bid=0;
+$('#cloze').innerHTML=B.cloze.map(s=>`<li>${esc(s).replace(/\[(.+?)\]/g,(_,w)=>{const id=bid++;return `<button class="blank${S.cz[id]?' on':''}" data-b="${id}" aria-label="${S.cz[id]?w:'点击揭晓'}">${w}</button>`})}</li>`).join('');
+function czCount(){$('#clozeN').textContent=`已揭晓 ${document.querySelectorAll('.blank.on').length} / ${document.querySelectorAll('.blank').length}`}
+$('#cloze').addEventListener('click',e=>{const b=e.target.closest('.blank');if(!b||b.classList.contains('on'))return;b.classList.add('on');b.setAttribute('aria-label',b.textContent);S.cz[b.dataset.b]=1;save();czCount()});
+$('#clozeReset').onclick=()=>{S.cz={};save();document.querySelectorAll('.blank').forEach(b=>{b.classList.remove('on');b.setAttribute('aria-label','点击揭晓')});czCount()};
+czCount();
+
+/* ---------- quiz ---------- */
+const QZ=B.quiz;let wrongOnly=false;
+function renderQuiz(){
+  const html=QZ.map((q,i)=>{const a=S.quiz[i],done=a!==undefined;
+    if(wrongOnly&&(!done||a===q.answer))return '';
+    return `<div class="card qq" data-q="${i}"><div class="qn">${i+1} / ${QZ.length}</div><div class="stem">${esc(q.q)}</div>
+     <div class="opts">${q.options.map((o,j)=>{let c='';if(done){if(j===q.answer)c='right';else if(j===a)c='wrong'}return `<button class="opt ${c}" data-j="${j}" ${done?'disabled':''}>${'ABCD'[j]}. ${esc(o)}</button>`}).join('')}</div>
+     ${done?`<div class="explain"><b style="color:${a===q.answer?'var(--ok)':'var(--bad)'}">${a===q.answer?'对。':'错。'}</b> ${esc(q.why)} <a href="#c${q.chunk}">（块 ${q.chunk}）</a></div>`:''}</div>`}).join('');
+  $('#quiz').innerHTML=html||'<div class="card how">没有错题。</div>';
+  const n=Object.keys(S.quiz).length,ok=QZ.filter((q,i)=>S.quiz[i]===q.answer).length;
+  $('#qscore').textContent=`${ok} / ${QZ.length}`+(n<QZ.length?`　已答 ${n}`:'');
+  $('#qwrong').textContent=wrongOnly?'显示全部':'只看错题';
+}
+$('#quiz').addEventListener('click',e=>{const b=e.target.closest('.opt');if(!b||b.disabled)return;S.quiz[b.closest('.qq').dataset.q]=+b.dataset.j;save();renderQuiz()});
+$('#qwrong').onclick=()=>{wrongOnly=!wrongOnly;renderQuiz()};
+$('#qreset').onclick=()=>{S.quiz={};wrongOnly=false;save();renderQuiz()};
+
+/* ---------- internalize ---------- */
+$('#claimLabel').textContent=`1. 有道理吗？对全书核心主张“${B.internalize.claim}”表态`;
+$('#w3').placeholder=B.internalize.apply_template;
+const ST=['同意','部分同意','不同意','暂缓判断'];
+function renderStance(){$('#stance').innerHTML=ST.map((s,i)=>`<button data-st="${i}" aria-pressed="${S.st===i}">${s}</button>`).join('')}
+$('#stance').addEventListener('click',e=>{const b=e.target.closest('[data-st]');if(!b)return;S.st=+b.dataset.st;save();renderStance();sheet()});
+function sheet(){
+  const v=k=>(S.w[k]||'').trim()||'（还没写）';
+  const txt=`《${bk.title}》我的一页笔记\n\n【一句话主旨】\n${(S.unity||'').trim()||'（还没写）'}\n\n【有道理吗】${S.st!=null?ST[S.st]:''}\n${v('w1')}\n\n【讲给朋友听】\n${v('w2')}\n\n【用在一件事上】\n${v('w3')}`;
+  $('#sheet').textContent=txt;return txt}
+['w1','w2','w3'].forEach(id=>{const el=$('#'+id);el.value=S.w[id]||'';el.addEventListener('input',()=>{S.w[id]=el.value;save();sheet()})});
+$('#copy').onclick=async()=>{const t=sheet();try{await navigator.clipboard.writeText(t);$('#copied').textContent='已复制'}catch(e){const r=document.createRange();r.selectNodeContents($('#sheet'));const s=getSelection();s.removeAllRanges();s.addRange(r);$('#copied').textContent='已选中，请按 ⌘C / Ctrl+C 复制'}};
+
+/* ---------- podcast ---------- */
+function showScript(p){
+  const box=$('#podScript');box.hidden=false;
+  box.innerHTML=`<div class="label">${esc(p.title||'节目文稿')}</div>`+p.segments.map(s=>`<h4>${esc(s.heading||'')}</h4>`+s.lines.map(l=>`<p><b>${l.speaker==='A'?'领读':'提问'}</b>${esc(l.text)}</p>`).join('')).join('');
+}
+if(B.podcast&&B.podcast.audio_url){const a=$('#podAudio');a.src=B.podcast.audio_url;a.hidden=false;$('#podBtn').hidden=true}
+if(B.podcast&&B.podcast.script){showScript(B.podcast.script);$('#podBtn').textContent='重新生成'}
+$('#podBtn').onclick=async()=>{
+  if(!API&&location.protocol==='file:'){$('#podState').textContent='播客需要在服务端生成，请用 npm run dev 打开本页。';return}
+  $('#podBtn').disabled=true;$('#podState').textContent='正在生成节目文稿，约 1–3 分钟…';
+  try{
+    const r=await fetch(API+'/api/podcast',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({slug:SLUG})});
+    const j=await r.json();if(!r.ok)throw new Error(j.error||r.status);
+    showScript(j.script);
+    if(j.audio_url){const a=$('#podAudio');a.src=j.audio_url;a.hidden=false}
+    $('#podState').textContent=j.audio_url?'':`文稿约 ${j.chars} 字。语音合成接入后会在这里直接播放。`;
+  }catch(err){$('#podState').textContent='生成失败：'+err.message}
+  $('#podBtn').disabled=false;
+};
+
+/* ---------- ask the author ---------- */
+const P=B.author_persona;
+$('#askTitle').textContent=`你有什么想问${P.name}？`;
+function renderChat(){
+  $('#msgs').innerHTML=S.chat.map(m=>`<div class="msg ${m.role==='user'?'u':'a'}">${esc(m.content)}</div>`).join('');
+  $('#starters').hidden=S.chat.length>0;
+}
+$('#starters').innerHTML=P.starter_questions.map(q=>`<button data-q="${esc(q)}">${esc(q)}</button>`).join('');
+$('#starters').addEventListener('click',e=>{const b=e.target.closest('[data-q]');if(b)send(b.dataset.q)});
+$('#askSend').onclick=()=>send($('#askInput').value);
+$('#askInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.metaKey||e.ctrlKey))send($('#askInput').value)});
+let busy=false;
+async function send(text){
+  text=(text||'').trim();if(!text||busy)return;
+  if(!API&&location.protocol==='file:'){$('#askState').textContent='问作者需要连接服务端，请用 npm run dev 打开本页。';return}
+  busy=true;$('#askSend').disabled=true;$('#askInput').value='';$('#askState').textContent='';
+  S.chat.push({role:'user',content:text});S.chat.push({role:'assistant',content:''});renderChat();
+  const el=$('#msgs').lastElementChild;
+  try{
+    const r=await fetch(API+'/api/ask',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({slug:SLUG,messages:S.chat.slice(0,-1).slice(-20)})});
+    if(!r.ok){const j=await r.json().catch(()=>({}));throw new Error(j.error||('服务返回 '+r.status))}
+    const rd=r.body.getReader(),dec=new TextDecoder();let acc='';
+    for(;;){const {done,value}=await rd.read();if(done)break;acc+=dec.decode(value,{stream:true});el.textContent=acc;S.chat[S.chat.length-1].content=acc}
+    save();
+  }catch(err){S.chat.pop();el.classList.add('err');el.textContent='没有得到回答：'+err.message}
+  busy=false;$('#askSend').disabled=false;
+}
+renderChat();
+
+/* ---------- footer ---------- */
+const conf={high:'依据充分',medium:'依据较充分，部分内容为概括',low:'依据有限，请谨慎参考'}[B.confidence.level]||'';
+$('#footer').innerHTML=`<p>本页内容由 AI 基于公开资料${B.meta&&B.meta.source==='upload'?'和用户提供的原文':''}整理生成，按论证顺序组织为 ${N} 个知识块，不对应原书章节编号，不能替代阅读原书。可信度：${esc(conf)}。${esc(B.confidence.notes||'')}</p>`+
+  (B.sources&&B.sources.length?`<p>参考来源：${B.sources.map(s=>`<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title)}</a>`).join('、')}</p>`:'')+
+  `<p>你写下的内容和用时只保存在当前浏览器里。</p>`;
+
+renderNav();renderQuiz();renderStance();sheet();tick();
+})();
+</script>
+</body>
+</html>
