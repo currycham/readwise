@@ -44,7 +44,6 @@ install -m 755 "$HERE/readwise-backup" /etc/cron.daily/readwise-backup
 echo "==> Caddy"
 if [ -f /etc/caddy/Caddyfile ] && command -v caddy >/dev/null; then
   install -m 644 "$HERE/readwise.caddy" /etc/caddy/readwise.caddy
-  mkdir -p /var/log/caddy && chown caddy:caddy /var/log/caddy 2>/dev/null || true
   if ! grep -q '^import readwise.caddy' /etc/caddy/Caddyfile; then
     cp /etc/caddy/Caddyfile "/etc/caddy/Caddyfile.bak.$(date +%Y%m%d%H%M%S)"
     printf '\nimport readwise.caddy\n' >> /etc/caddy/Caddyfile

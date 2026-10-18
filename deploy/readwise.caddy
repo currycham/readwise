@@ -19,11 +19,4 @@ readwise.waywise.tech {
 		Referrer-Policy strict-origin-when-cross-origin
 		-Server
 	}
-
-	log {
-		output file /var/log/caddy/readwise.log {
-			roll_size 20MiB
-			roll_keep 5
-		}
-	}
 }
