@@ -7,7 +7,7 @@ export default async function Header() {
   return (
     <header className="site-head">
       <div className="wrap">
-        <Link href="/" className="brand"><b>Readwise</b><span>60 分钟吃透一本书</span></Link>
+        <Link href="/" className="brand"><b>Readwise</b><span>让读过的书成为你的一部分</span></Link>
         <nav aria-label="主导航">
           <Link href="/library">书库</Link>
           <Link href="/rank">排行榜</Link>

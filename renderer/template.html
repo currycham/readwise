@@ -264,7 +264,7 @@ footer a{color:var(--muted)}
       <div class="transcript" id="podScript" hidden></div>
     </div>
 
-    <p class="by">60 分钟吃透全书：检视 5′ → 分析 40′ → 检测 5′ → 批判与内化 10′</p>
+    <p class="by">60 分钟精读全书：检视 5′ → 分析 40′ → 检测 5′ → 批判与内化 10′</p>
     <div class="rules">
       <div><b>四个问题串起全程</b>《如何阅读一本书》：整体在谈什么？细节怎么说？有道理吗？与我何干？四步依次回答。</div>
       <div><b>限时是要求，不是参考</b>每步点“开始计时”。超时会变成琥珀色，完成时记录用时。时间不够就略读，别停下。</div>
@@ -529,7 +529,7 @@ function renderQuiz(){
   if(qmode==='done'&&c)gain=c.credits?`<div class="gain">+${c.credits} 积分</div>`:'';
   const note=qmode==='done'&&c&&c.note?`<div class="how">${esc(c.note)}</div>`:(!SITE||SITE.viewer?'':`<div class="how"><a href="/login?next=${here}">登录</a>后首次闯关及格可得 ${QR.complete} 积分。</div>`);
   stage.innerHTML=`<div class="qend"><div class="grade ${g}">${g}</div><div><div class="big num" style="font-size:26px">${st.ok} / ${QZ.length}</div><div class="readout">最长连对 ${st.max} 题</div>${gain}${note}</div></div>
-    ${wr.length?`<div class="wrongs"><b>答错的题，回去看看：</b>${wr.map(k=>`<a href="#c${QZ[k].chunk}">第 ${k+1} 题：${esc(QZ[k].q)} → 块 ${QZ[k].chunk}</a>`).join('')}</div>`:'<div class="how">全部答对，这本书你已经吃透了。</div>'}
+    ${wr.length?`<div class="wrongs"><b>答错的题，回去看看：</b>${wr.map(k=>`<a href="#c${QZ[k].chunk}">第 ${k+1} 题：${esc(QZ[k].q)} → 块 ${QZ[k].chunk}</a>`).join('')}</div>`:'<div class="how">全部答对，这本书已经成为你的一部分了。</div>'}
     <div class="ctrl"><button class="btn" id="qagain">再练一次（不计分）</button></div>`;
   $('#qagain').onclick=()=>{qmode='practice';run={};S.quiz={};save();qfb=null;qerr='';renderQuiz()};
 }

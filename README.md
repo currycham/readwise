@@ -1,163 +1,121 @@
-# Readwise · 书籍精读回顾
+# Readwise · 让读过的书成为你的一部分
 
-输入书名，生成一个 60 分钟限时、可交互的精读学习页（按《如何阅读一本书》和《学习之道》组织），附带推荐模块、双人播客稿和“问作者”。仓库包含两部分：内容引擎（`engine/`、`renderer/`，可单独用命令行跑）和网站（`app/` Next.js + `worker/` 后台任务进程 + SQLite）。
+**在线体验：<https://readwise.waywise.tech>**　·　示例书页：[《最小阻力之路》](https://readwise.waywise.tech/b/%E6%9C%80%E5%B0%8F%E9%98%BB%E5%8A%9B%E4%B9%8B%E8%B7%AF)
 
-## 流程
+输入一本书的书名，Readwise 会用 AI 为它生成一份「书籍回顾」：先听一段双人播客，再限时逐块精读、闯关检测、联系自己，最后还能向“作者”提问。书库里的每一本都公开，谁都可以免费读。
+
+## 为什么做这个
+
+很多书读完就忘了。合上书的那一刻觉得收获很多，过几个月只剩一个书名和一点模糊的印象。
+
+问题往往不在读得不够多，而在读完之后没有再和这本书发生关系：没有回头整理它到底在说什么，没有检验自己是否真的懂了，也没有把它和自己的生活连起来。
+
+两本讲“怎么读”和“怎么学”的书，给了这个问题很好的答案：
+
+- **《如何阅读一本书》**：读懂一本书，要依次回答四个问题：整体在谈什么？细节怎么说？说得有道理吗？和我有什么关系？
+- **《学习之道》**：记得住靠的是限时专注、把知识切成小块、主动回忆、交错检测和间隔复习，而不是反复重读。
+
+Readwise 想做的，就是把这两套方法变成一份可以直接用的回顾页。你不用自己做笔记、出题、想问题，打开书页，跟着走 60 分钟，这本书就有机会真正成为你的一部分。
+
+## 一份书籍回顾里有什么
+
+| 模块 | 时间 | 做什么 |
+|---|---|---|
+| 推荐 | 先看 | 一句话讲清这本书解决什么问题，适合谁、不适合谁 |
+| 双人播客 | 15–20′ | 领读人和提问者聊这本书，适合通勤或睡前先听一遍 |
+| 检视 | 5′ | 这是一本什么书、要回答什么问题、全书的结构图 |
+| 分析 | 40′ | 8–10 个知识块：核心观点、关键概念、例子、常见误解，每块读完马上自测 |
+| 检测 | 5′ | 12 道闯关题，连对有连击，答错会告诉你回看哪一块 |
+| 内化 | 10′ | 填空回忆、批判性思考、和自己的处境联系起来 |
+| 向作者提问 | 读后 | AI 以作者的视角回答你的问题（AI 模拟，非作者本人观点） |
+
+书库按“这本书能帮你解决什么问题”分类，比如“总是拖延”“想不清楚做不好决定”“不会沟通表达”。按问题找书，比按图书分类找更贴近人为什么会去读一本书。
+
+## 怎么做的
+
+### 生成流程
 
 ```
-书名 ──► 联网检索（博查）──► 资料充分度打分（0–9）
-                                 │ 不足 / 同名多本 → 提示上传原文或指定作者
-                                 ▼
-原文 txt/pdf/epub ──► 分块抽取笔记 ─┘
-                                 ▼
-                    生成书页 JSON ──► 结构校验（不过则修一次）
-                                 ▼
-                    质检（编造/误引/答案错误）──► 按 high/medium 意见修正
-                                 ▼
-                    保存 out/books/<书名>/<模型>.json + 渲染 HTML
-                                 ▼
-             问作者（书页作上下文，流式）  播客稿（首次点播放时生成）
+书名 ──► 联网检索书籍资料 ──► 评估资料是否充分可靠
+                                │  不够 → 请用户上传原文；同名多本 → 请用户指定作者
+                                ▼
+                     生成结构化书页（JSON）──► 结构校验
+                                ▼
+                     质检：编造、误引、题目答案错误 ──► 按意见修正
+                                ▼
+                     内容安全审核 ──► 入库，渲染成书页
+                                ▼
+                     播客稿 ──► 双人语音合成          问作者：以书页为上下文流式回答
 ```
 
-- 模型只输出结构化 JSON，`renderer/template.html` 负责渲染。改样式不需要重新生成内容，网页和以后的 App 共用同一份数据。
-- 每次模型调用都会记账到 `out/ledger.jsonl`（tokens、元、用时），方便核算单本成本。
-- 上传的原文只在内存中处理，不保存，生成的公开书页只含解读，单处引用不超过 30 字。
+几个关键设计：
 
-## 快速开始
+- **先查资料，再动笔**。模型很容易把一本没读过的书“编”得头头是道。每本书都先联网检索，再由另一个模型给资料的充分度打分，资料不够就不生成，宁可请用户上传原文。
+- **生成和质检分开**。生成用一个模型，质检用另一个模型，专门找编造的例子、张冠李戴的引用和答案有误的题目，发现问题就修正。质检分会存下来，方便人工抽查。
+- **模型只输出数据，不写网页**。模型输出结构固定的 JSON（schema 见 `engine/schema.mjs`），由模板渲染成页面。改样式不用重新生成内容，以后做 App 也能用同一份数据。
+- **生成失败时自动换模型**。主模型偶尔会截断或超时，这时自动换备用模型重试，不让用户白等。
+- **豆瓣评分直接取自豆瓣**，书页上可以点击核对。
+- **每次模型调用都记账**：tokens、花费、用时都记下来。一本书的书页大约 ¥1.5–3，播客大约 ¥2.5。
 
-需要 Node.js 20+；解析 PDF 需要 `pdftotext`（macOS：`brew install poppler`）。
+### 用到的模型和服务
+
+| 环节 | 当前选择 |
+|---|---|
+| 联网检索 | 博查 Web Search |
+| 资料评估、质检、备用生成 | DeepSeek |
+| 书页生成、播客稿 | 腾讯混元 Hy4（TokenHub） |
+| 问作者 | 腾讯混元 Hy3 |
+| 播客配音 | MiniMax 语音（TokenHub） |
+| 内容安全 | 腾讯云文本内容安全 |
+
+模型都通过 OpenAI 兼容接口调用，每个环节用哪个模型可以在 `config/models.mjs` 或环境变量里换。仓库里还有一个对比脚本，可以用同一份书单横向比较多个模型的质量、成本和速度（`npm run compare`）。
+
+### 技术栈
+
+- **网站**：Next.js 15（App Router），服务端渲染，SQLite（better-sqlite3）
+- **后台任务**：独立的 worker 进程排队生成书页和播客，同时生成的数量有上限，全站每天的模型成本也有上限
+- **部署**：一台 4 核 8G 的云服务器，用 systemd 跑网站和 worker，Caddy 反向代理并自动签发 HTTPS 证书
+- **账号**：邮箱验证码登录；积分、等级、排行榜、用户主页
+- **游戏化**：读完一本书并闯关及格能得积分，首位生成的书被别人读完也能得积分，等级从书童到翰林
+
+## 本地运行
+
+需要 Node.js 20+；解析 PDF 原文需要 `pdftotext`（macOS：`brew install poppler`）。
 
 ```bash
 npm install
-cp .env.example .env          # 填入申请到的 key，ADMIN_PHONES 填自己的手机号
-npm run dev                   # 网站：http://localhost:3000
-npm run worker                # 另开一个终端：后台任务进程（生成书页、合成播客）
+cp .env.example .env     # 填入模型和检索服务的 API key，ADMIN_EMAILS 填自己的邮箱
+npm run dev              # 网站：http://localhost:3000
+npm run worker           # 另开一个终端：后台任务进程（生成书页、合成播客）
 ```
 
-本地开发时短信默认是 `SMS_PROVIDER=dev`：验证码打印在 `npm run dev` 的终端里。
+本地开发时邮件默认是 dev 模式，登录验证码会打印在 `npm run dev` 的终端里。
 
-## 部署到 readwise.waywise.tech
-
-脚本和配置在 `deploy/`：服务器上用 systemd 常驻网站（`readwise-web`，只监听 127.0.0.1:3000）和后台任务（`readwise-worker`）两个进程，由现有的 Caddy 反向代理并自动签发 HTTPS 证书。代码在 `/srv/readwise/app`，数据在 `/srv/readwise/data`，每天备份数据库到 `/srv/readwise/backup`（保留 14 天）。
-
-1. DNSPod 给 waywise.tech 加一条 A 记录：主机记录 `readwise` → 服务器 IP；云服务器防火墙放行 80、443。
-2. 准备一份生产用的 `.env`（不要提交）：`SESSION_SECRET`（`openssl rand -hex 32`）、`ADMIN_EMAILS`、模型和博查的 key、`NEXT_PUBLIC_ICP`；正式开放前打开 `MAIL_PROVIDER=smtp` 和 `MODERATION_PROVIDER=tencent`。
-3. 第一次部署（初始化服务器 + 上传 .env + 推送本机样书，可选）：
+只想试试内容引擎、不起网站的话，可以直接用命令行：
 
 ```bash
-DEPLOY_HOST=ubuntu@111.229.194.119 DEPLOY_KEY=~/.ssh/waywise_ed25519 deploy/deploy.sh --setup --env .env.production --push-data
+npm run generate -- "原子习惯" --author 詹姆斯·克利尔    # 检索 → 生成 → 质检，输出到 out/books/
+npm run render -- fixtures/最小阻力之路.json             # 把书页 JSON 渲染成单个 HTML
 ```
 
-4. 以后每次更新：`DEPLOY_HOST=ubuntu@111.229.194.119 DEPLOY_KEY=~/.ssh/waywise_ed25519 deploy/deploy.sh`
-
-### 邮箱登录（默认）
-
-个人资质即可，不需要短信签名。默认 `LOGIN_METHODS=email`；以后有了企业资质的短信，可以改成 `email,phone` 同时开放。
-
-1. 准备一个发信邮箱，开通 SMTP：
-   - **QQ 邮箱**（最简单）：设置 → 账号 → 开启"POP3/SMTP 服务"，拿到**授权码**。`SMTP_HOST=smtp.qq.com`、`SMTP_PORT=465`、`SMTP_USER=你的QQ邮箱`、`SMTP_PASS=授权码`。
-   - 或者用 waywise.tech 的域名邮箱（腾讯企业邮等），发件人显示为 `noreply@waywise.tech`，更正式，也更不容易进垃圾箱。
-2. 在 `.env.production` 里填：`MAIL_PROVIDER=smtp`、上面四项、`MAIL_FROM="Readwise <发信邮箱>"`（地址要和 `SMTP_USER` 一致），以及 `ADMIN_EMAILS=你的邮箱`。
-3. 部署后测试：`cd /srv/readwise/app && sudo -u readwise npm run mail-test -- 你的邮箱`
-
-腾讯云服务器封了 25 端口，SMTP 必须用 465 或 587。
-
-### 接入腾讯云短信（需要企业资质，可选）
-
-1. 腾讯云控制台 → 短信 → 国内短信：
-   - **签名**：类型选"网站"，填已备案的域名 waywise.tech，签名内容和备案主体一致（个人备案用个人名义）。
-   - **正文模板**：类型选"验证码"，例如 `您的验证码为{1}，{2}分钟内有效，如非本人操作请忽略。`（只有 `{1}` 的模板要设 `SMS_TEMPLATE_PARAMS=1`）。
-   - 应用管理里记下 **SDK AppID**。
-2. 访问管理 → API 密钥：建议新建子用户，只授权 `QcloudSMSFullAccess`（以后开内容安全再加 `QcloudTMSFullAccess`），拿到 SecretId / SecretKey。
-3. 在 `.env.production` 里填：`SMS_PROVIDER=tencent`、`TENCENTCLOUD_SECRET_ID`、`TENCENTCLOUD_SECRET_KEY`、`SMS_SDK_APP_ID`、`SMS_SIGN_NAME`（签名内容，不带【】）、`SMS_TEMPLATE_ID`。
-4. 部署：`deploy/deploy.sh --env .env.production`，然后在服务器上发一条测试短信：
-   `cd /srv/readwise/app && sudo -u readwise npm run sms-test -- 你的手机号`
-
-### 常用运维命令（在服务器 `/srv/readwise/app` 下以 readwise 用户执行）
-
-- `npm run import-book -- 书页.json [--podcast]`：把命令行生成的书页导入书库
-- `npm run revoice -- [书名 ...]`：换了音色（`TTS_VOICE_A` / `TTS_VOICE_B`）后，沿用对谈稿给已有播客重新配音
-- `npm run set-first-user -- 昵称或邮箱 [--only 书名]`：修改首位生成者（后台书籍页也能逐本改）
-- `npm run mail-test -- 邮箱`：测试邮件配置
-
-看日志：`ssh ubuntu@111.229.194.119 sudo journalctl -u readwise-web -u readwise-worker -f`（邮件还是 dev 模式时，验证码也打印在这里）。
-
-只想看引擎效果、不起网站时，`npm run preview` 打开旧的本地预览服务（http://localhost:5173）。
-
-## 网站功能
-
-| 页面 | 说明 |
-|---|---|
-| `/` | 首页：产品说明、搜索生成、最近在读、按问题找书、价格 |
-| `/library`、`/b/<slug>` | 公共书库和书页，不登录也能看；书页显示豆瓣评分、首位生成者 |
-| `/login` | 手机号验证码登录（新号码自动注册） |
-| `/new`、`/jobs/<id>` | 生成新书、查看进度 |
-| `/me` | 额度、积分流水、改昵称、我首次生成的书 |
-| `/pricing` | 套餐、充值积分包、读书赚积分规则（都在 `config/plans.mjs`） |
-| `/rank` | 排行榜：本周 / 总榜，按获得的积分排名 |
-| `/admin` | 管理后台：概览、书籍、用户、任务、反馈 |
-
-**额度规则**：免费用户每月生成 1 本、每天问作者 10 次；会员每月 5 本、每天 100 次；超出后按积分扣（生成 30 积分/本，提问 1 积分/次）。全站每天有模型成本上限 `DAILY_BUDGET_YUAN`。
-
-**积分与游戏化**（只有一种积分，获得的和充值的一样可以花）：
-- 检测改为闯关：一题一题作答，连对有连击，结束给 S/A/B/C 评级。答案不下发到页面，由 `/api/quiz` 判分。
-- 登录用户打开书页满 10 分钟后才能开始计分闯关；每题只算第一次作答；首次闯关答对 8/12 得 5 积分，全对再 +3。之后可以无限练习，不计分。
-- 成功生成新书 +5；你首位生成的书每被一位其他用户闯关及格 +2（每本最多 40）。白名单和管理员生成不发奖励。
-- 每项奖励都有月度上限（读完 60、生成 25、被人读完 100），单个用户每月最多白得 185 积分（¥18.5）。注册送 20。
-- 等级按累计获得的积分（不含充值、赠送、管理员发放）：书童 → 书生 → 秀才 → 举人 → 进士 → 翰林。排行榜同样只算获得的积分。
-
-**内测白名单**：在 `/admin/users` 点“设为无限量”，该用户生成、提问、触发播客都不受次数限制，也不扣积分（仍受“同时最多 2 本在生成”和全站每日成本上限约束）。白名单期间的生成不计入套餐额度，取消白名单后按正常额度计算。在线支付尚未接入，内测期间积分和会员由管理员在后台发放。
-
-## 常用命令
-
-| 命令 | 作用 |
-|---|---|
-| `npm run generate -- "原子习惯" --author 詹姆斯·克利尔` | 检索 → 生成 → 质检，输出到 `out/books/原子习惯/` |
-| `npm run generate -- "某本书" --file 原文.pdf` | 资料不足时用原文生成（txt / pdf / epub） |
-| `npm run generate -- "原子习惯" --model hy4` | 指定生成模型（alias 见 `config/models.mjs`） |
-| `npm run compare -- --models deepseek-pro,hy4,qwen-max` | 用测试书单（`config/eval-books.mjs`）对比多个模型，输出 `out/compare/*.html` 报告 |
-| `npm run podcast-script -- out/books/原子习惯/deepseek-pro.json` | 为书页写 15–20 分钟双人播客稿（时长见 `PODCAST_MINUTES`） |
-| `npm run render -- fixtures/最小阻力之路.json` | 把书页 JSON 渲染成单个 HTML |
-| `npm run check -- 书页.json` | 只做结构校验 |
-
-## 需要申请的服务
-
-| 服务 | 用途 | 环境变量 |
-|---|---|---|
-| DeepSeek 开放平台 | 生成书页、修正、播客稿（候选） | `DEEPSEEK_API_KEY` |
-| 腾讯混元（或腾讯云 TokenHub） | 生成（候选 Hy4）、质检和问作者（Hy3） | `HUNYUAN_API_KEY` 或 `TOKENHUB_*` |
-| 阿里云百炼 | 生成（候选 Qwen-Max）；以后 MiniMax 语音合成也可从这里调用 | `DASHSCOPE_API_KEY` |
-| 博查 Web Search API | 联网检索书籍资料 | `BOCHA_API_KEY` |
-| 腾讯云 TokenHub · MiniMax 语音 | 播客语音合成 | `TOKENHUB_API_KEY`、`TTS_*` |
-| 腾讯云短信 | 登录验证码 | `TENCENTCLOUD_*`、`SMS_*` |
-| 腾讯云文本内容安全 | 审核提问、昵称、反馈 | `TENCENTCLOUD_*`、`TMS_*` |
-
-模型 ID 和价格变化很快，`config/models.mjs` 里是初值，以控制台为准，用环境变量覆盖即可。
+部署、运维、积分规则等更多细节见 [docs/DEPLOY.md](docs/DEPLOY.md)。
 
 ## 目录
 
 ```
-config/      模型与价格、问题分类表、对比书单
-engine/      llm（兼容接口客户端+记账）、search、upload、prompts、schema（结构与校验）、pipeline、ask、podcast
+config/      模型与价格、问题分类表、套餐与积分规则
+engine/      内容引擎：检索、资料评估、生成、校验、质检、播客、问作者、豆瓣评分
 renderer/    书页模板与渲染
-scripts/     命令行入口
-server/      旧的本地预览服务（npm run preview）
 app/         Next.js 网站（页面、接口、管理后台）
-lib/         数据库、登录、额度积分、任务队列、短信、内容审核
-worker/      后台任务进程：书页生成、播客稿 + 语音合成
-fixtures/    人工整理的《最小阻力之路》样例书页（质量基准）
-out/         生成结果、缓存、成本账本（不入库）
+lib/         数据库、登录、额度与积分、任务队列、邮件、内容审核
+worker/      后台任务进程
+scripts/     命令行工具和运维脚本
+deploy/      部署脚本、systemd 和 Caddy 配置
+fixtures/    人工整理的样例书页，作为质量基准
 ```
 
-## 模型对比怎么看
+## 反馈
 
-1. 先跑 `npm run compare`，看报告里的成功率、平均成本、用时、质检分和严重问题数。
-2. 质检分只是参考，**一定要人工抽查**：每本书至少打开两个模型的页面，对照你对原书的了解，看核心概念是否准确、例子是否编造、题目是否有歧义。
-3. 用 `fixtures/最小阻力之路.json` 作为质量基准：生成结果至少要达到这个水平。
-4. 选定后在 `.env` 里设置 `ROLE_GENERATE`、`ROLE_CHECK`、`ROLE_ASK`。
+欢迎在 [Issues](https://github.com/currycham/readwise/issues) 里提建议；书页里的内容有错，可以直接点页面底部的“发现内容有误？告诉我们”。如果觉得这个想法有意思，点个 Star 让更多人看到。
 
-## 下一阶段
-
-- 在线支付（微信 / 支付宝），需先把备案主体换成公司。
-- 用户量上来后：SQLite → PostgreSQL，播客音频存 COS + CDN。
-- 合规：ICP 备案、生成式 AI 应用登记；上线前打开 `MODERATION_PROVIDER=tencent` 和 `SMS_PROVIDER=tencent`。
+书籍回顾、播客和“问作者”的内容都由 AI 基于公开资料生成，可能有错误，不能替代阅读原书。

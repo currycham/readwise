@@ -243,3 +243,10 @@ button,input,textarea,select{font:inherit;color:inherit}
 .legal section h2{font-size:20px;margin:8px 0 10px}
 .legal section ul{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:6px}
 .legal section p{margin:6px 0}
+
+.oss{display:flex;align-items:center;gap:16px;text-decoration:none;color:var(--ink)}
+.oss:hover{border-color:var(--ink)}
+.oss>div{flex:1}
+.oss p{margin:4px 0 0}
+@media (max-width:560px){.oss{flex-wrap:wrap}.oss>span{width:100%}}
+.nw{white-space:nowrap}

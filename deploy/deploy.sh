@@ -1,21 +1,21 @@
 #!/usr/bin/env bash
 # 在本机执行，把当前代码部署到服务器并重启服务。
 #
-#   DEPLOY_HOST=ubuntu@111.229.194.119 DEPLOY_KEY=~/.ssh/waywise_ed25519 deploy/deploy.sh --setup   # 第一次：初始化服务器 + 部署
-#   DEPLOY_HOST=ubuntu@111.229.194.119 DEPLOY_KEY=~/.ssh/waywise_ed25519 deploy/deploy.sh           # 以后每次更新
+#   DEPLOY_HOST=ubuntu@<服务器IP> DEPLOY_KEY=~/.ssh/<你的密钥> deploy/deploy.sh --setup   # 第一次：初始化服务器 + 部署
+#   DEPLOY_HOST=ubuntu@<服务器IP> DEPLOY_KEY=~/.ssh/<你的密钥> deploy/deploy.sh           # 以后每次更新
 #
 # 选项：
 #   --setup        先运行 setup-server.sh（装 Node、建用户、systemd、Caddy 配置），可重复执行
 #   --env FILE     上传 FILE 作为服务器上的 .env（默认只在服务器还没有 .env 时提示）
 #   --push-data    把本机 out/ 里的数据库、书页和播客音频推到服务器（仅当服务器上还没有数据库时，防止覆盖线上数据）
 #
-# 指定密钥：DEPLOY_KEY=~/.ssh/waywise_ed25519（不设则用 ssh 默认配置）
+# 指定密钥：DEPLOY_KEY=~/.ssh/<你的密钥>（不设则用 ssh 默认配置）
 # 要求：本机能 ssh 免密登录 DEPLOY_HOST，且该用户有免密 sudo（腾讯云的 ubuntu / root 默认满足）。
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
 HOST="${DEPLOY_HOST:-}"
-[ -n "$HOST" ] || { echo "请设置 DEPLOY_HOST，例如 DEPLOY_HOST=ubuntu@111.229.194.119"; exit 1; }
+[ -n "$HOST" ] || { echo "请设置 DEPLOY_HOST，例如 DEPLOY_HOST=ubuntu@<服务器IP>"; exit 1; }
 SETUP=0; ENV_FILE=""; PUSH_DATA=0
 while [ $# -gt 0 ]; do
   case "$1" in
