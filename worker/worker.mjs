@@ -53,9 +53,15 @@ async function runPodcast(job) {
   updateBook(book.id, { podcast_status: 'running' });
   try {
     const page = JSON.parse(book.page_json);
-    setProgress(job.id, '编写对谈稿…');
-    const s = await podcastScript(page);
-    updateBook(book.id, { podcast_script: JSON.stringify(s.script) });
+    let s;
+    if (job.input?.revoice && book.podcast_script) {
+      // 只换音色：沿用已有对谈稿，重新配音
+      s = { script: JSON.parse(book.podcast_script) };
+    } else {
+      setProgress(job.id, '编写对谈稿…');
+      s = await podcastScript(page);
+      updateBook(book.id, { podcast_script: JSON.stringify(s.script) });
+    }
     const file = dataPath('media', 'podcast', `${book.id}.mp3`);
     const a = await synthesizePodcast(s.script, file, { book: book.title, onProgress: (d, n) => setProgress(job.id, `配音 ${d}/${n}`) });
     updateBook(book.id, { podcast_status: 'ready', podcast_file: file, podcast_ms: a.durationMs });

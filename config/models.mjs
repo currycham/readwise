@@ -105,9 +105,9 @@ export const TTS = {
   url: (env.TOKENHUB_BASE_URL || 'https://tokenhub.tencentmaas.com/v1').replace(/\/$/, '') + '/wand/minimax-tts/sync_tts',
   keyEnv: 'TOKENHUB_API_KEY',
   model: env.TTS_MODEL || 'minimax-speech-2.8-turbo',
-  voiceA: env.TTS_VOICE_A || 'presenter_male',   // 领读人
-  voiceB: env.TTS_VOICE_B || 'presenter_female', // 提问者
-  speed: Number(env.TTS_SPEED || 1.05),
+  voiceA: env.TTS_VOICE_A || 'Chinese (Mandarin)_Gentle_Youth', // 领读人：温和的年轻男声
+  voiceB: env.TTS_VOICE_B || 'Chinese (Mandarin)_Warm_Bestie',  // 提问者：亲切的年轻女声
+  speed: Number(env.TTS_SPEED || 1.0),
   pricePer10k: Number(env.TTS_PRICE_PER_10K || 2), // 元 / 万计费字符，待按控制台核实
   concurrency: Number(env.TTS_CONCURRENCY || 4),
 };

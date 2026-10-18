@@ -73,6 +73,13 @@ DEPLOY_HOST=ubuntu@111.229.194.119 DEPLOY_KEY=~/.ssh/waywise_ed25519 deploy/depl
 4. 部署：`deploy/deploy.sh --env .env.production`，然后在服务器上发一条测试短信：
    `cd /srv/readwise/app && sudo -u readwise npm run sms-test -- 你的手机号`
 
+### 常用运维命令（在服务器 `/srv/readwise/app` 下以 readwise 用户执行）
+
+- `npm run import-book -- 书页.json [--podcast]`：把命令行生成的书页导入书库
+- `npm run revoice -- [书名 ...]`：换了音色（`TTS_VOICE_A` / `TTS_VOICE_B`）后，沿用对谈稿给已有播客重新配音
+- `npm run set-first-user -- 昵称或邮箱 [--only 书名]`：修改首位生成者（后台书籍页也能逐本改）
+- `npm run mail-test -- 邮箱`：测试邮件配置
+
 看日志：`ssh ubuntu@111.229.194.119 sudo journalctl -u readwise-web -u readwise-worker -f`（邮件还是 dev 模式时，验证码也打印在这里）。
 
 只想看引擎效果、不起网站时，`npm run preview` 打开旧的本地预览服务（http://localhost:5173）。
