@@ -44,7 +44,7 @@ export default async function Me({ searchParams }) {
       </div>
       <div className="stats">
         <div className="stat"><div className="v">{q.planName}</div><div className="k">{q.unlimited ? '生成、提问、播客不限次数' : isMember(user) ? `会员到期 ${fmtBJ(user.member_until).slice(0, 10)}` : '当前套餐'}</div></div>
-        <div className="stat"><div className="v">{q.credits}</div><div className="k">积分</div></div>
+        <div className="stat"><div className="v">{q.credits}</div><div className="k">可用积分</div></div>
         <div className="stat"><div className="v">{q.unlimited ? `已用 ${q.generations.used}` : `${q.generations.left} / ${q.generations.limit}`}</div><div className="k">{q.unlimited ? '本月生成次数' : '本月剩余生成次数'}</div></div>
         <div className="stat"><div className="v">{q.unlimited ? `已用 ${q.asks.used}` : `${q.asks.left} / ${q.asks.limit}`}</div><div className="k">{q.unlimited ? '今天提问次数' : '今天剩余提问次数'}</div></div>
       </div>

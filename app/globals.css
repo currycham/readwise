@@ -45,11 +45,16 @@ button,input,textarea,select{font:inherit;color:inherit}
 .brand b{font-family:var(--f-display);font-size:22px;letter-spacing:.01em}
 .brand span{font-size:12px;color:var(--muted)}
 .site-head nav{display:flex;gap:4px;flex:1}
-.site-head nav a{color:var(--muted);text-decoration:none;padding:6px 10px;border-radius:8px;font-size:15px}
+.site-head nav a{white-space:nowrap;color:var(--muted);text-decoration:none;padding:6px 10px;border-radius:8px;font-size:15px}
 .site-head nav a:hover{color:var(--ink);background:var(--surface)}
 .who{display:flex;align-items:center;gap:10px;font-size:14px}
 .who a{text-decoration:none}
 .pill{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:99px;padding:3px 10px;font-size:13px;color:var(--ink);background:var(--surface);text-decoration:none}
+.user-pill>span+span{border-left:1px solid var(--line);padding-left:6px}
+.user-pill>.hide-sm+span{border-left:0;padding-left:0}
+@media (min-width:561px){.user-pill>.hide-sm+span{border-left:1px solid var(--line);padding-left:6px}}
+.user-pill .lv{color:var(--tension)}
+.user-pill .bal{color:var(--muted)}
 
 /* buttons & inputs */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:8px 16px;border-radius:8px;cursor:pointer;font-size:15px;line-height:1.4;text-decoration:none}
@@ -208,6 +213,8 @@ button,input,textarea,select{font:inherit;color:inherit}
 }
 @media (max-width:560px){
   .site-head nav a{padding:6px 6px;font-size:14px}
+  .hide-sm{display:none}
+  .site-head .wrap{gap:10px}
   .brand span{display:none}
   .search form{flex-direction:column}
   .search .btn{width:100%}
