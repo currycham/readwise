@@ -24,7 +24,7 @@ export default async function AdminJobs({ searchParams }) {
               <td>{j.book_title || input.title}</td>
               <td>{j.nickname}</td>
               <td>{STATUS[j.status]}</td>
-              <td className="w small">{j.status === 'failed' ? <span className="err">{j.error}</span> : j.status === 'review' ? <Review j={j} /> : j.progress}</td>
+              <td className="w small">{j.status === 'failed' ? <span className="err">{j.error}</span> : j.status === 'review' || JSON.parse(j.result || '{}').moderation ? <Review j={j} /> : j.progress}</td>
               <td>{j.charge}{j.charged_credits ? ` ${j.charged_credits}` : ''}</td>
               <td className="num">¥{(j.cost || 0).toFixed(2)}</td>
               <td className="num">{fmtBJ(j.created_at)}</td>
@@ -48,9 +48,9 @@ function Review({ j }) {
   const m = JSON.parse(j.result || '{}').moderation || {};
   return (
     <span>
-      <b>{m.label}{m.subLabel ? `/${m.subLabel}` : ''}</b>{m.keywords?.length ? ` 关键词：${m.keywords.join('、')}` : ''}
+      {j.status === 'done' && '已发布，审核提示 '}<b>{m.label}{m.subLabel ? `/${m.subLabel}` : ''}</b>{m.keywords?.length ? ` 关键词：${m.keywords.join('、')}` : ''}
       {m.snippet && <><br /><span className="muted">…{m.snippet}…</span></>}
-      {j.book_slug && <><br /><a href={`/b/${encodeURIComponent(j.book_slug)}`} target="_blank">预览书页（仅管理员可见）</a></>}
+      {j.book_slug && <><br /><a href={`/b/${encodeURIComponent(j.book_slug)}`} target="_blank">{j.status === 'review' ? '预览书页（仅管理员可见）' : '查看书页'}</a></>}
     </span>
   );
 }

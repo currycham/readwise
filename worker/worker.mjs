@@ -53,7 +53,8 @@ async function runGenerate(job) {
       return finishJob(job.id, { status: 'review', bookId: book.id, result: { moderation: modInfo } });
     }
     const reward = existed ? 0 : rewardGenerate(job, book.id);
-    finishJob(job.id, { status: 'done', bookId: book.id, result: { slug: book.slug, existed, reward } });
+    if (mod.flag) console.warn(`任务 ${job.id} 审核提示（已发布）：${JSON.stringify(mod.flag)}`);
+    finishJob(job.id, { status: 'done', bookId: book.id, result: { slug: book.slug, existed, reward, ...(mod.flag ? { moderation: mod.flag } : {}) } });
   } finally {
     if (file) await rm(file, { force: true }); // 上传的原文处理完即删除
   }
@@ -79,10 +80,11 @@ async function runPodcast(job) {
     // 播客稿配音前先审核，不通过就不花配音的钱
     const mod = await checkLongText(collectText(s.script).join('\n'));
     if (!mod.ok) throw new Error(`播客稿未通过内容安全审核（${mod.label || '违规'}）`);
+    if (mod.flag) console.warn(`任务 ${job.id} 播客稿审核提示（照常配音）：${JSON.stringify(mod.flag)}`);
     const file = dataPath('media', 'podcast', `${book.id}.mp3`);
     const a = await synthesizePodcast(s.script, file, { book: book.title, onProgress: (d, n) => setProgress(job.id, `配音 ${d}/${n}`) });
     updateBook(book.id, { podcast_status: 'ready', podcast_file: file, podcast_ms: a.durationMs });
-    finishJob(job.id, { status: 'done', bookId: book.id, result: { ms: a.durationMs } });
+    finishJob(job.id, { status: 'done', bookId: book.id, result: { ms: a.durationMs, ...(mod.flag ? { moderation: mod.flag } : {}) } });
   } catch (e) {
     // 重新配音失败时旧音频还在（新文件只在全部合成成功后才写入），恢复原来的播客
     const keep = job.input?.revoice && book.podcast_file && existsSync(book.podcast_file);
