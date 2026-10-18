@@ -415,7 +415,7 @@ $('#bookType').textContent=B.inspect.book_type;
 $('#problem').textContent=B.inspect.problem;
 $('#unityRef').textContent=B.inspect.unity;
 const M=B.inspect.map;
-const col=(side,cls)=>`<div class="col ${cls}"><h3>${esc(side.title)}</h3>${side.nodes.map((n,i)=>`${i?'<div class="arr">↓</div>':''}<div class="node">${esc(n.text)}<a href="#c${n.chunk}">块 ${n.chunk}</a></div>`).join('')}</div>`;
+const col=(side,cls)=>`<div class="col ${cls}"><h3>${esc(side.title)}</h3>${side.nodes.map((n,i)=>`${i?'<div class="arr">↓</div>':''}<div class="node">${esc(n.text)}${n.chunk?`<a href="#c${n.chunk}">块 ${n.chunk}</a>`:''}</div>`).join('')}</div>`;
 $('#map').innerHTML=`<div class="top">${esc(M.top)}</div>${col(M.left,'l')}${col(M.right,'r')}<div class="sw">${esc(M.bridge)}</div>`;
 
 /* ---------- steps & timer ---------- */

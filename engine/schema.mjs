@@ -71,6 +71,16 @@ export function validatePage(p) {
   need(p.book && isStr(p.book.title) && isStr(p.book.author), 'book.title / book.author 缺失');
   // 先就地规整分类：去掉附带的说明、旧分类名换成新的，能修好就不必让模型重写
   if (Array.isArray(p.book?.categories)) p.book.categories = p.book.categories.map(c => normalizeCategory(c) || c);
+  // 知识图谱节点的“块 N”只是跳转链接：数字字符串转成数字，越界的去掉链接，不因此判整页失败
+  const nCh = Array.isArray(p.chunks) ? p.chunks.length : 0;
+  for (const side of ['left', 'right']) {
+    for (const n of p.inspect?.map?.[side]?.nodes || []) {
+      if (n && typeof n === 'object') {
+        if (typeof n.chunk === 'string' && /^\d+$/.test(n.chunk.trim())) n.chunk = Number(n.chunk);
+        if (!(Number.isInteger(n.chunk) && n.chunk >= 1 && n.chunk <= nCh)) delete n.chunk;
+      }
+    }
+  }
   const cats = p.book?.categories;
   need(Array.isArray(cats) && cats.length >= 1 && cats.length <= 3, 'book.categories 需要 1–3 个');
   (cats || []).forEach((c, i) => need(isValidCategory(c.top, c.sub), `book.categories[${i}] 不在分类表中：${c.top}/${c.sub}`));
@@ -115,7 +125,7 @@ export function validatePage(p) {
     need(total >= 4300, `知识块内容偏少（合计 ${total} 字，需要约 4800–6500 字）`);
   }
   for (const side of ['left', 'right']) {
-    (map[side]?.nodes || []).forEach((n, i) => need(Number.isInteger(n.chunk) && n.chunk >= 1 && n.chunk <= nChunks, `inspect.map.${side}.nodes[${i}].chunk 超出范围`));
+    (map[side]?.nodes || []).forEach((n, i) => need(n.chunk == null || (Number.isInteger(n.chunk) && n.chunk >= 1 && n.chunk <= nChunks), `inspect.map.${side}.nodes[${i}].chunk 超出范围`));
   }
 
   need(Array.isArray(p.cloze) && p.cloze.length >= 8 && p.cloze.length <= 12, 'cloze 需要 8–12 句');
