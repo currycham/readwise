@@ -8,8 +8,9 @@ User=readwise
 Group=readwise
 WorkingDirectory=/srv/readwise/app
 Environment=NODE_ENV=production
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
 Environment=READWISE_DATA_DIR=/srv/readwise/data
-ExecStart=/usr/local/bin/node --env-file-if-exists=.env worker/worker.mjs
+ExecStart=/usr/bin/env node --env-file-if-exists=.env worker/worker.mjs
 Restart=always
 RestartSec=5
 # 收到退出信号后会等当前任务做完（播客最长约 15 分钟），避免半途丢任务

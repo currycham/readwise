@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # 服务器一次性初始化（Ubuntu/Debian，root 执行）。由 deploy.sh --setup 自动上传并运行，也可手动：
 #   sudo bash /tmp/readwise-deploy/setup-server.sh
-# 做的事：装 Node 22 和依赖工具、建 readwise 用户和目录、装 systemd 服务、把站点接进现有 Caddy、装每日备份。
+# 做的事：确保有 Node 20+、装依赖工具、建 readwise 用户和目录、装 systemd 服务、把站点接进现有 Caddy、装每日备份。
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 NODE_VERSION=22.14.0
@@ -13,14 +13,15 @@ echo "==> 系统依赖（编译 better-sqlite3 的兜底工具、pdftotext、sql
 apt-get update -qq
 DEBIAN_FRONTEND=noninteractive apt-get install -y -qq build-essential python3 poppler-utils sqlite3 rsync curl xz-utils >/dev/null
 
-echo "==> Node.js $NODE_VERSION"
-if ! /usr/local/bin/node -v 2>/dev/null | grep -q "^v$NODE_VERSION$"; then
+echo "==> Node.js"
+# 服务器上已有 Node 20+ 就直接用，避免影响机器上的其他程序；没有才从 npmmirror 装到 /usr/local
+NODE_MAJOR=$(PATH=/usr/local/bin:/usr/bin:/bin node -v 2>/dev/null | sed -E 's/^v([0-9]+).*/\1/' || true)
+if [ -z "$NODE_MAJOR" ] || [ "$NODE_MAJOR" -lt 20 ]; then
   case "$(uname -m)" in x86_64) ARCH=x64 ;; aarch64) ARCH=arm64 ;; *) echo "不支持的架构 $(uname -m)"; exit 1 ;; esac
-  # 用 npmmirror 镜像，国内服务器下载快
   curl -fsSL "https://registry.npmmirror.com/-/binary/node/v$NODE_VERSION/node-v$NODE_VERSION-linux-$ARCH.tar.xz" \
     | tar -xJ -C /usr/local --strip-components=1
 fi
-/usr/local/bin/node -v
+PATH=/usr/local/bin:/usr/bin:/bin node -v
 
 echo "==> 用户和目录 $BASE"
 id readwise &>/dev/null || useradd --system --home-dir "$BASE" --shell /usr/sbin/nologin readwise

@@ -8,9 +8,10 @@ User=readwise
 Group=readwise
 WorkingDirectory=/srv/readwise/app
 Environment=NODE_ENV=production
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
 Environment=READWISE_DATA_DIR=/srv/readwise/data
 # 只监听本机，由 Caddy 对外提供 HTTPS
-ExecStart=/usr/local/bin/node --env-file-if-exists=.env node_modules/next/dist/bin/next start -H 127.0.0.1 -p 3000
+ExecStart=/usr/bin/env node --env-file-if-exists=.env node_modules/next/dist/bin/next start -H 127.0.0.1 -p 3000
 Restart=always
 RestartSec=3
 # 短信 dev 模式下验证码打印在这里：journalctl -u readwise-web -f

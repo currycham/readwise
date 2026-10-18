@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
 # 在本机执行，把当前代码部署到服务器并重启服务。
 #
-#   DEPLOY_HOST=ubuntu@111.229.194.119 deploy/deploy.sh --setup   # 第一次：初始化服务器 + 部署
-#   DEPLOY_HOST=ubuntu@111.229.194.119 deploy/deploy.sh           # 以后每次更新
+#   DEPLOY_HOST=ubuntu@111.229.194.119 DEPLOY_KEY=~/.ssh/waywise_ed25519 deploy/deploy.sh --setup   # 第一次：初始化服务器 + 部署
+#   DEPLOY_HOST=ubuntu@111.229.194.119 DEPLOY_KEY=~/.ssh/waywise_ed25519 deploy/deploy.sh           # 以后每次更新
 #
 # 选项：
 #   --setup        先运行 setup-server.sh（装 Node、建用户、systemd、Caddy 配置），可重复执行
 #   --env FILE     上传 FILE 作为服务器上的 .env（默认只在服务器还没有 .env 时提示）
 #   --push-data    把本机 out/ 里的数据库、书页和播客音频推到服务器（仅当服务器上还没有数据库时，防止覆盖线上数据）
 #
+# 指定密钥：DEPLOY_KEY=~/.ssh/waywise_ed25519（不设则用 ssh 默认配置）
 # 要求：本机能 ssh 免密登录 DEPLOY_HOST，且该用户有免密 sudo（腾讯云的 ubuntu / root 默认满足）。
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -27,7 +28,9 @@ while [ $# -gt 0 ]; do
 done
 
 BASE=/srv/readwise
-SSH="ssh -o ServerAliveInterval=30 $HOST"
+SSH_CMD="ssh -o ServerAliveInterval=30${DEPLOY_KEY:+ -i $DEPLOY_KEY -o IdentitiesOnly=yes}"
+SSH="$SSH_CMD $HOST"
+export RSYNC_RSH="$SSH_CMD"
 # macOS 自带的 openrsync 不支持 --chown，同步后再在服务器上统一改属主
 RSYNC_SUDO=(--rsync-path="sudo rsync")
 
@@ -75,7 +78,7 @@ fi
 $SSH "sudo chown -R readwise:readwise $BASE/app $BASE/data"
 
 echo "==> 安装依赖并构建"
-$SSH "cd $BASE/app && sudo -u readwise -H bash -c 'export PATH=/usr/local/bin:\$PATH; npm ci --no-audit --no-fund && npm run build'"
+$SSH "cd $BASE/app && sudo -u readwise -H bash -c 'export PATH=/usr/local/bin:/usr/bin:/bin; npm ci --no-audit --no-fund && npm run build'"
 
 echo "==> 重启服务"
 # worker 会等当前任务做完再退出，最长可能要十几分钟；网站先重启，worker 放后台重启

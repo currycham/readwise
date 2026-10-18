@@ -45,10 +45,10 @@ npm run worker                # 另开一个终端：后台任务进程（生成
 3. 第一次部署（初始化服务器 + 上传 .env + 推送本机样书，可选）：
 
 ```bash
-DEPLOY_HOST=ubuntu@111.229.194.119 deploy/deploy.sh --setup --env .env.production --push-data
+DEPLOY_HOST=ubuntu@111.229.194.119 DEPLOY_KEY=~/.ssh/waywise_ed25519 deploy/deploy.sh --setup --env .env.production --push-data
 ```
 
-4. 以后每次更新：`DEPLOY_HOST=ubuntu@111.229.194.119 deploy/deploy.sh`
+4. 以后每次更新：`DEPLOY_HOST=ubuntu@111.229.194.119 DEPLOY_KEY=~/.ssh/waywise_ed25519 deploy/deploy.sh`
 
 看日志：`ssh ubuntu@111.229.194.119 sudo journalctl -u readwise-web -u readwise-worker -f`（短信还是 dev 模式时，验证码也打印在这里）。
 
