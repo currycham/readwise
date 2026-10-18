@@ -398,7 +398,7 @@ const bk=B.book;
 document.title=bk.title+' 精读手册';
 $('#title').textContent=bk.title;
 $('#enTitle').textContent=[bk.original_title,bk.author_en].filter(Boolean).join(' · ')||'精读手册';
-$('#by').innerHTML=esc(bk.author)+' 著'+(bk.douban&&bk.douban.rating?`　<span class="db">豆瓣 ${Number(bk.douban.rating).toFixed(1)}${bk.douban.count?`（${Number(bk.douban.count).toLocaleString()} 人评价）`:''}</span>`:'')+(SITE&&SITE.first_by?`　<span style="font-size:13px">首位生成：${esc(SITE.first_by)}</span>`:'');
+$('#by').innerHTML=esc(bk.author)+' 著'+(bk.douban&&bk.douban.rating?`　<span class="db">豆瓣 ${Number(bk.douban.rating).toFixed(1)}${bk.douban.count?`（${Number(bk.douban.count).toLocaleString()} 人评价）`:''}</span>`:'')+(SITE&&SITE.first_by?`　<span style="font-size:13px">首位生成：${SITE.first_by_id?`<a href="/u/${Number(SITE.first_by_id)}">${esc(SITE.first_by)}</a>`:esc(SITE.first_by)}</span>`:'');
 if(SITE){const sb=$('#sitebar');sb.hidden=false;
   sb.innerHTML=`<span><a href="/"><b>Readwise</b></a><a href="/library">书库</a></span><span>${SITE.viewer?`<a href="/me">${esc(SITE.viewer.nickname)}${SITE.viewer.level?` · ${esc(SITE.viewer.level)}`:''}</a>`:`<a href="/login?next=${here}">登录 / 注册</a>`}</span>`;
   $('#report').hidden=false}
@@ -639,7 +639,7 @@ $('#footer').innerHTML=`<p>本页内容由 AI 基于公开资料${B.meta&&B.meta
   (B.sources&&B.sources.length?`<p>参考来源：${B.sources.map(s=>`<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title)}</a>`).join('、')}</p>`:'')+
   `<p>你写下的内容和用时只保存在当前浏览器里。</p>`;
 
-if(SITE&&SITE.first_by)$('#footer').insertAdjacentHTML('beforeend',`<p>本书的回顾由 <b>${esc(SITE.first_by)}</b> 首次生成。</p>`);
+if(SITE&&SITE.first_by)$('#footer').insertAdjacentHTML('beforeend',`<p>本书的回顾由 <b>${SITE.first_by_id?`<a href="/u/${Number(SITE.first_by_id)}">${esc(SITE.first_by)}</a>`:esc(SITE.first_by)}</b> 首次生成。</p>`);
 $('#reportBtn').onclick=()=>{$('#reportBox').hidden=!$('#reportBox').hidden};
 $('#reportSend').onclick=async()=>{
   const t=$('#reportText').value.trim();if(!t)return;

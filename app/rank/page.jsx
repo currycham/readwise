@@ -16,7 +16,7 @@ export default async function Rank({ searchParams }) {
     <div className="wrap page narrow">
       <div className="stack">
         <h1>排行榜</h1>
-        <p className="muted">按读书获得的积分排名：读完一本、生成新书、你生成的书被别人读完，都会加分。充值的积分不计入。</p>
+        <p className="muted">按读书获得的积分排名：读完一本、生成新书、你生成的书被别人读完，都会加分。充值的积分不计入。点昵称可以看 TA 生成过的书。</p>
         <div className="tabs">
           <Link href="/rank" className={period === 'week' ? 'on' : ''}>本周</Link>
           <Link href="/rank?p=all" className={period === 'all' ? 'on' : ''}>总榜</Link>
@@ -30,13 +30,14 @@ export default async function Rank({ searchParams }) {
       )}
       {rows.length ? (
         <div className="tbl"><table>
-          <thead><tr><th>名次</th><th>读者</th><th>等级</th><th>{period === 'week' ? '本周' : '累计'}读完</th><th>积分</th></tr></thead>
+          <thead><tr><th>名次</th><th>读者</th><th>等级</th><th>{period === 'week' ? '本周' : '累计'}读完</th><th>生成</th><th>积分</th></tr></thead>
           <tbody>{rows.map(r => (
             <tr key={r.id} className={user?.id === r.id ? 'me' : ''}>
               <td className="num">{r.rank <= 3 ? ['🥇', '🥈', '🥉'][r.rank - 1] : r.rank}</td>
-              <td>{r.nickname}</td>
+              <td><Link href={`/u/${r.id}`}>{r.nickname}</Link></td>
               <td>{r.level}</td>
               <td className="num">{r.books} 本</td>
+              <td className="num">{r.generated} 本</td>
               <td className="num">{r.earned}</td>
             </tr>
           ))}</tbody>
