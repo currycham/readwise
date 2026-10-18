@@ -9,16 +9,16 @@ export default async function AdminUsers({ searchParams }) {
   const rows = getDb().prepare(`SELECT u.*, (SELECT COUNT(*) FROM jobs j WHERE j.user_id = u.id AND j.type = 'generate') gens,
       (SELECT COUNT(*) FROM usage x WHERE x.user_id = u.id AND x.task = 'ask') asks,
       (SELECT COALESCE(SUM(cost),0) FROM usage x WHERE x.user_id = u.id) cost
-    FROM users u WHERE (u.phone LIKE ? OR u.nickname LIKE ?) AND (? = '' OR u.unlimited = 1) ORDER BY u.id DESC LIMIT 200`).all(`%${q}%`, `%${q}%`, only ? '1' : '');
+    FROM users u WHERE (u.phone LIKE ? OR u.email LIKE ? OR u.nickname LIKE ?) AND (? = '' OR u.unlimited = 1) ORDER BY u.id DESC LIMIT 200`).all(`%${q}%`, `%${q}%`, `%${q}%`, only ? '1' : '');
   return (
     <div className="stack">
-      <form className="row"><input className="input" name="q" defaultValue={q} placeholder="手机号或昵称" style={{ maxWidth: 280 }} /><button className="btn">搜索</button>
+      <form className="row"><input className="input" name="q" defaultValue={q} placeholder="邮箱、手机号或昵称" style={{ maxWidth: 280 }} /><button className="btn">搜索</button>
         <label className="small"><input type="checkbox" name="unlimited" value="1" defaultChecked={only} /> 只看内测白名单</label></form>
       <div className="tbl"><table>
         <thead><tr><th>用户</th><th>角色</th><th>积分</th><th>会员到期</th><th>生成</th><th>提问</th><th>累计成本</th><th>注册</th><th>调整积分</th><th>会员</th><th>内测白名单</th><th>状态</th></tr></thead>
         <tbody>{rows.map(u => (
           <tr key={u.id}>
-            <td>{u.nickname}<br /><span className="muted small num">{u.phone}</span></td>
+            <td>{u.nickname}<br /><span className="muted small num">{u.email || u.phone}</span></td>
             <td>
               <form method="post" action="/api/admin" className="inline-form">
                 <input type="hidden" name="action" value="user_role" /><input type="hidden" name="id" value={u.id} />

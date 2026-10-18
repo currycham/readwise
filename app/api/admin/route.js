@@ -1,5 +1,6 @@
 // 后台操作：表单 POST，处理后跳回原页面
 import { NextResponse } from 'next/server';
+import { isValidCategory } from '../../../config/categories.mjs';
 import { updateBook } from '../../../lib/books.mjs';
 import { addCredits } from '../../../lib/credits.mjs';
 import { getDb, tx } from '../../../lib/db.mjs';
@@ -23,6 +24,15 @@ export async function POST(req) {
         const rating = f.rating === '' ? null : Number(f.rating);
         if (rating != null && !(rating >= 0 && rating <= 10)) throw new Error('评分需要在 0–10 之间');
         updateBook(id, { douban_rating: rating, douban_count: f.count === '' ? null : Math.round(Number(f.count)), douban_via: rating == null ? null : 'admin' });
+        break;
+      }
+      case 'book_category': {
+        const [top, sub] = String(f.category || '').split('/');
+        if (!isValidCategory(top, sub)) throw new Error('分类不在分类表中');
+        const b = db.prepare('SELECT page_json FROM books WHERE id = ?').get(id);
+        const page = JSON.parse(b.page_json);
+        page.book.categories = [{ top, sub }];
+        updateBook(id, { categories: JSON.stringify(page.book.categories), page_json: JSON.stringify(page) });
         break;
       }
       case 'book_podcast_reset':

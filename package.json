@@ -22,11 +22,13 @@
     "worker": "node --env-file-if-exists=.env worker/worker.mjs",
     "preview": "node --env-file-if-exists=.env server/dev-server.mjs",
     "import-book": "node --env-file-if-exists=.env scripts/import-book.mjs",
-    "sms-test": "node --env-file-if-exists=.env scripts/sms-test.mjs"
+    "sms-test": "node --env-file-if-exists=.env scripts/sms-test.mjs",
+    "mail-test": "node --env-file-if-exists=.env scripts/mail-test.mjs"
   },
   "dependencies": {
     "better-sqlite3": "12.4.1",
     "next": "15.5.27",
+    "nodemailer": "10.0.14",
     "react": "19.1.1",
     "react-dom": "19.1.1"
   },

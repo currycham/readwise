@@ -10,7 +10,7 @@ export const PAGE_SHAPE = `{
     "author": "作者中文名",
     "author_en": "作者原名，没有就空字符串",
     "original_title": "原书名，没有就空字符串",
-    "categories": [{"top": "大问题，必须来自分类表", "sub": "子问题，必须来自分类表"}]
+    "categories": [{"top": "大问题，必须来自分类表", "sub": "子问题，必须来自分类表"}]  // 只放 1 项
   },
   "recommend": {
     "one_line": "这本书帮你解决什么问题，一句话，≤40字",

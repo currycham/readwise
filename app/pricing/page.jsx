@@ -29,7 +29,7 @@ export default function Pricing() {
       <section className="stack">
         <h2 style={{ fontSize: 24 }}>充值积分</h2>
         <div className="packs">
-          {PACKS.map(p => <div key={p.yuan}><b>¥{p.yuan}</b><span className="num">{p.credits} 积分</span><small>{p.note || '\u00a0'}</small></div>)}
+          {PACKS.map(p => <div key={p.yuan}><b><span className="cur">¥</span>{p.yuan}</b><span className="num">{p.credits} 积分</span><small>{p.note || '\u00a0'}</small></div>)}
         </div>
         <p className="muted small">在线支付即将开通。内测期间如需积分或会员，请联系管理员。</p>
       </section>

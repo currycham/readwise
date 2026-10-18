@@ -41,7 +41,7 @@ npm run worker                # 另开一个终端：后台任务进程（生成
 脚本和配置在 `deploy/`：服务器上用 systemd 常驻网站（`readwise-web`，只监听 127.0.0.1:3000）和后台任务（`readwise-worker`）两个进程，由现有的 Caddy 反向代理并自动签发 HTTPS 证书。代码在 `/srv/readwise/app`，数据在 `/srv/readwise/data`，每天备份数据库到 `/srv/readwise/backup`（保留 14 天）。
 
 1. DNSPod 给 waywise.tech 加一条 A 记录：主机记录 `readwise` → 服务器 IP；云服务器防火墙放行 80、443。
-2. 准备一份生产用的 `.env`（不要提交）：`SESSION_SECRET`（`openssl rand -hex 32`）、`ADMIN_PHONES`、模型和博查的 key、`NEXT_PUBLIC_ICP`；正式开放前打开 `SMS_PROVIDER=tencent` 和 `MODERATION_PROVIDER=tencent`。
+2. 准备一份生产用的 `.env`（不要提交）：`SESSION_SECRET`（`openssl rand -hex 32`）、`ADMIN_EMAILS`、模型和博查的 key、`NEXT_PUBLIC_ICP`；正式开放前打开 `MAIL_PROVIDER=smtp` 和 `MODERATION_PROVIDER=tencent`。
 3. 第一次部署（初始化服务器 + 上传 .env + 推送本机样书，可选）：
 
 ```bash
@@ -50,7 +50,19 @@ DEPLOY_HOST=ubuntu@111.229.194.119 DEPLOY_KEY=~/.ssh/waywise_ed25519 deploy/depl
 
 4. 以后每次更新：`DEPLOY_HOST=ubuntu@111.229.194.119 DEPLOY_KEY=~/.ssh/waywise_ed25519 deploy/deploy.sh`
 
-### 接入腾讯云短信
+### 邮箱登录（默认）
+
+个人资质即可，不需要短信签名。默认 `LOGIN_METHODS=email`；以后有了企业资质的短信，可以改成 `email,phone` 同时开放。
+
+1. 准备一个发信邮箱，开通 SMTP：
+   - **QQ 邮箱**（最简单）：设置 → 账号 → 开启"POP3/SMTP 服务"，拿到**授权码**。`SMTP_HOST=smtp.qq.com`、`SMTP_PORT=465`、`SMTP_USER=你的QQ邮箱`、`SMTP_PASS=授权码`。
+   - 或者用 waywise.tech 的域名邮箱（腾讯企业邮等），发件人显示为 `noreply@waywise.tech`，更正式，也更不容易进垃圾箱。
+2. 在 `.env.production` 里填：`MAIL_PROVIDER=smtp`、上面四项、`MAIL_FROM="Readwise <发信邮箱>"`（地址要和 `SMTP_USER` 一致），以及 `ADMIN_EMAILS=你的邮箱`。
+3. 部署后测试：`cd /srv/readwise/app && sudo -u readwise npm run mail-test -- 你的邮箱`
+
+腾讯云服务器封了 25 端口，SMTP 必须用 465 或 587。
+
+### 接入腾讯云短信（需要企业资质，可选）
 
 1. 腾讯云控制台 → 短信 → 国内短信：
    - **签名**：类型选"网站"，填已备案的域名 waywise.tech，签名内容和备案主体一致（个人备案用个人名义）。
@@ -61,7 +73,7 @@ DEPLOY_HOST=ubuntu@111.229.194.119 DEPLOY_KEY=~/.ssh/waywise_ed25519 deploy/depl
 4. 部署：`deploy/deploy.sh --env .env.production`，然后在服务器上发一条测试短信：
    `cd /srv/readwise/app && sudo -u readwise npm run sms-test -- 你的手机号`
 
-看日志：`ssh ubuntu@111.229.194.119 sudo journalctl -u readwise-web -u readwise-worker -f`（短信还是 dev 模式时，验证码也打印在这里）。
+看日志：`ssh ubuntu@111.229.194.119 sudo journalctl -u readwise-web -u readwise-worker -f`（邮件还是 dev 模式时，验证码也打印在这里）。
 
 只想看引擎效果、不起网站时，`npm run preview` 打开旧的本地预览服务（http://localhost:5173）。
 

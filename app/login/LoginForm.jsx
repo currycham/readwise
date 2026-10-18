@@ -1,23 +1,28 @@
 'use client';
 import { useState } from 'react';
 
-export default function LoginForm({ next }) {
-  const [phone, setPhone] = useState('');
+export default function LoginForm({ next, methods = ['email'] }) {
+  const email = methods.includes('email'), phone = methods.includes('phone');
+  const label = email && phone ? '邮箱或手机号' : phone ? '手机号' : '邮箱';
+  const [account, setAccount] = useState('');
   const [code, setCode] = useState('');
   const [sent, setSent] = useState(0);
   const [msg, setMsg] = useState('');
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
   const [nick, setNick] = useState(null); // 新用户登录成功后进入起昵称这一步
+  const a = account.trim();
+  const ready = (email && /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(a)) || (phone && /^1\d{10}$/.test(a));
 
   async function send() {
     setErr(''); setMsg(''); setBusy(true);
     try {
-      const r = await fetch('/api/auth/code', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ phone }) });
+      const r = await fetch('/api/auth/code', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ account: account.trim() }) });
       const j = await r.json();
       if (!r.ok) throw new Error(j.error);
       setSent(Date.now());
-      setMsg(j.devCode ? `本地开发模式，验证码：${j.devCode}` : j.dev ? '开发模式：验证码已打印在服务端日志里。' : '验证码已发送，5 分钟内有效。');
+      setMsg(j.devCode ? `本地开发模式，验证码：${j.devCode}` : j.dev ? '开发模式：验证码已打印在服务端日志里。'
+        : j.type === 'email' ? `验证码已发到你的邮箱，${j.minutes} 分钟内有效。没收到的话看看垃圾邮件。` : `验证码已发送，${j.minutes} 分钟内有效。`);
     } catch (e) { setErr(e.message); }
     setBusy(false);
   }
@@ -26,7 +31,7 @@ export default function LoginForm({ next }) {
     e.preventDefault();
     setErr(''); setBusy(true);
     try {
-      const r = await fetch('/api/auth/verify', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ phone, code }) });
+      const r = await fetch('/api/auth/verify', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ account: account.trim(), code }) });
       const j = await r.json();
       if (!r.ok) throw new Error(j.error);
       if (j.isNew) { setNick(j.user?.nickname || ''); setBusy(false); return; }
@@ -62,10 +67,12 @@ export default function LoginForm({ next }) {
   return (
     <form className="card stack" onSubmit={verify} style={{ maxWidth: 440 }}>
       <div className="field">
-        <label htmlFor="phone">手机号</label>
+        <label htmlFor="account">{label}</label>
         <div className="row" style={{ flexWrap: 'nowrap' }}>
-          <input id="phone" className="input" inputMode="numeric" maxLength={11} value={phone} onChange={e => setPhone(e.target.value.replace(/\D/g, ''))} placeholder="11 位手机号" autoComplete="tel" />
-          <button type="button" className="btn" onClick={send} disabled={busy || phone.length !== 11 || Date.now() - sent < 60e3} style={{ whiteSpace: 'nowrap' }}>{sent ? '重新获取' : '获取验证码'}</button>
+          <input id="account" className="input" type={phone ? 'text' : 'email'} inputMode={email ? 'email' : 'numeric'} value={account}
+            onChange={e => setAccount(email ? e.target.value : e.target.value.replace(/\D/g, ''))} maxLength={email ? 254 : 11}
+            placeholder={email && phone ? '邮箱地址或 11 位手机号' : phone ? '11 位手机号' : 'name@example.com'} autoComplete={email ? 'email' : 'tel'} />
+          <button type="button" className="btn" onClick={send} disabled={busy || !ready || Date.now() - sent < 60e3} style={{ whiteSpace: 'nowrap' }}>{sent ? '重新获取' : '获取验证码'}</button>
         </div>
       </div>
       <div className="field">
@@ -74,8 +81,8 @@ export default function LoginForm({ next }) {
       </div>
       {msg && <p className="ok">{msg}</p>}
       {err && <p className="err">{err}</p>}
-      <button className="btn primary" type="submit" disabled={busy || phone.length !== 11 || code.length !== 6}>登录</button>
-      <p className="muted small">登录即表示你同意用户协议和隐私政策。我们只用手机号识别账号，不会公开显示。</p>
+      <button className="btn primary" type="submit" disabled={busy || !ready || code.length !== 6}>登录</button>
+      <p className="muted small">登录即表示你同意用户协议和隐私政策。你的{label}只用来登录，不会公开显示。</p>
     </form>
   );
 }

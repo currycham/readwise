@@ -61,7 +61,7 @@ export default async function Me({ searchParams }) {
         ) : <div className="muted small">已是最高等级。</div>}
       </div>
       <div className="card stack" style={{ maxWidth: 520 }}>
-        <div className="muted small">手机号 {pu.phone}</div>
+        <div className="muted small">登录账号 {pu.account}</div>
         <NicknameForm nickname={user.nickname} next={sp.next} />
       </div>
 

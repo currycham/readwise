@@ -88,7 +88,8 @@ export default async function Home() {
           <div className="sec-head"><h2>按问题找书</h2><span className="muted small">每本书都按它能帮你解决的问题归类，鼠标移到方框上可以看到书目</span></div>
           <div className="cats">
             {CATEGORIES.map(c => {
-              const books = byTop[c.name] || [], n = counts[c.name] || 0;
+              const groups = byTop[c.name] || [], n = counts[c.name] || 0;
+              const listed = groups.reduce((k, g) => k + g.books.length, 0);
               return (
                 <div className="cat" key={c.id} tabIndex={0}>
                   <h3><Link href={`/library?top=${encodeURIComponent(c.name)}`}>{c.name}</Link><small>{n} 本</small></h3>
@@ -96,12 +97,17 @@ export default async function Home() {
                     {c.subs.map(s => <Link key={s} href={`/library?top=${encodeURIComponent(c.name)}&sub=${encodeURIComponent(s)}`}>{s}{counts[`${c.name}/${s}`] ? ` ${counts[`${c.name}/${s}`]}` : ''}</Link>)}
                   </div>
                   <div className="cat-books">
-                    {books.length ? (
+                    {groups.length ? (
                       <>
-                        <ul>{books.map(b => (
-                          <li key={b.slug}><Link href={`/b/${encodeURIComponent(b.slug)}`}><b>{b.title}</b><span>{b.author}{b.douban ? ` · 豆瓣 ${b.douban}` : ''}</span></Link></li>
-                        ))}</ul>
-                        {n > books.length && <Link className="small" href={`/library?top=${encodeURIComponent(c.name)}`}>查看全部 {n} 本 →</Link>}
+                        {groups.map(g => (
+                          <div key={g.sub}>
+                            <div className="cat-sub">{g.sub}</div>
+                            <ul>{g.books.map(b => (
+                              <li key={b.slug}><Link href={`/b/${encodeURIComponent(b.slug)}`}><b>{b.title}</b><span>{b.author}{b.douban ? ` · 豆瓣 ${b.douban}` : ''}</span></Link></li>
+                            ))}</ul>
+                          </div>
+                        ))}
+                        {n > listed && <Link className="small" href={`/library?top=${encodeURIComponent(c.name)}`}>查看全部 {n} 本 →</Link>}
                       </>
                     ) : <p className="muted small">这里还没有书。在上方输入书名，生成第一本。</p>}
                   </div>
