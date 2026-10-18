@@ -109,5 +109,5 @@ export const TTS = {
   voiceB: env.TTS_VOICE_B || 'Chinese (Mandarin)_Warm_Bestie',  // 提问者：亲切的年轻女声
   speed: Number(env.TTS_SPEED || 1.0),
   pricePer10k: Number(env.TTS_PRICE_PER_10K || 2), // 元 / 万计费字符，待按控制台核实
-  concurrency: Number(env.TTS_CONCURRENCY || 4),
+  concurrency: Number(env.TTS_CONCURRENCY || 3), // 整个 worker 进程同时发出的配音请求数上限
 };

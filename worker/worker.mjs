@@ -1,5 +1,6 @@
 // 后台任务进程：从队列领取任务，执行书页生成和播客生成。
 //   npm run worker      （生产环境用 pm2 / systemd 常驻）
+import { existsSync } from 'node:fs';
 import { rm } from 'node:fs/promises';
 import { setUsageSink, withContext } from '../engine/context.mjs';
 import { dataPath } from '../engine/paths.mjs';
@@ -67,7 +68,9 @@ async function runPodcast(job) {
     updateBook(book.id, { podcast_status: 'ready', podcast_file: file, podcast_ms: a.durationMs });
     finishJob(job.id, { status: 'done', bookId: book.id, result: { ms: a.durationMs } });
   } catch (e) {
-    updateBook(book.id, { podcast_status: 'failed' });
+    // 重新配音失败时旧音频还在（新文件只在全部合成成功后才写入），恢复原来的播客
+    const keep = job.input?.revoice && book.podcast_file && existsSync(book.podcast_file);
+    updateBook(book.id, { podcast_status: keep ? 'ready' : 'failed' });
     throw e;
   }
 }

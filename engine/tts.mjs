@@ -44,14 +44,23 @@ export function stripMp3(buf) {
   return buf.subarray(i);
 }
 
+// 整个进程共用的并发上限：worker 可能同时跑几个播客任务，TokenHub 对并发有限制（约 5 个），超了直接返回 429
+let active = 0;
+const waiting = [];
+async function withSlot(fn) {
+  if (active >= TTS.concurrency) await new Promise(r => waiting.push(r));
+  active++;
+  try { return await fn(); } finally { active--; waiting.shift()?.(); }
+}
+
 async function speak(text, voice, book) {
   const key = process.env[TTS.keyEnv];
   if (!key) throw new Error(`缺少环境变量 ${TTS.keyEnv}`);
   let lastErr;
-  for (let attempt = 0; attempt < 4; attempt++) {
+  for (let attempt = 0; attempt < 7; attempt++) {
     const t0 = Date.now();
     try {
-      const res = await fetch(TTS.url, {
+      const res = await withSlot(() => fetch(TTS.url, {
         method: 'POST',
         headers: { 'content-type': 'application/json', authorization: `Bearer ${key}` },
         body: JSON.stringify({
@@ -61,7 +70,7 @@ async function speak(text, voice, book) {
           audio_setting: { format: 'mp3', sample_rate: 32000, bitrate: 64000, channel: 1 },
           output_format: 'hex',
         }),
-      });
+      }));
       const j = await res.json().catch(() => ({}));
       if (res.ok && j.data?.audio && j.base_resp?.status_code === 0) {
         const chars = j.extra_info?.usage_characters || [...text].length * 2;
@@ -71,7 +80,8 @@ async function speak(text, voice, book) {
       lastErr = new Error(`语音合成失败 ${res.status}：${JSON.stringify(j.base_resp || j).slice(0, 200)}`);
       if (res.status < 500 && res.status !== 429 && j.base_resp?.status_code !== 1002) break;
     } catch (e) { lastErr = e; }
-    await new Promise(r => setTimeout(r, 1500 * 2 ** attempt));
+    // 1.5s、3s、6s、12s、20s、20s，加一点随机，避免几个请求同时重试又撞上
+    await new Promise(r => setTimeout(r, Math.min(20e3, 1500 * 2 ** attempt) + Math.random() * 1000));
   }
   throw lastErr;
 }

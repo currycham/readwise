@@ -10,7 +10,7 @@ function status(book) {
   return {
     status: book.podcast_status,
     progress: job?.progress || '',
-    url: book.podcast_status === 'ready' ? `/media/podcast/${book.id}.mp3` : null,
+    url: book.podcast_status === 'ready' ? `/media/podcast/${book.id}.mp3?v=${book.podcast_ms || 0}` : null,
     ms: book.podcast_ms,
     script: book.podcast_status === 'ready' && book.podcast_script ? JSON.parse(book.podcast_script) : null,
   };
