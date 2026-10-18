@@ -51,7 +51,8 @@ async function runPodcast(job) {
   const db = getDb();
   const book = db.prepare('SELECT * FROM books WHERE id = ?').get(job.book_id);
   if (!book) throw new Error('书不存在');
-  updateBook(book.id, { podcast_status: 'running' });
+  // 重新配音时旧播客照常可听，合成成功后直接替换
+  if (!job.input?.revoice) updateBook(book.id, { podcast_status: 'running' });
   try {
     const page = JSON.parse(book.page_json);
     let s;
