@@ -8,6 +8,7 @@ export default function LoginForm({ next }) {
   const [msg, setMsg] = useState('');
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
+  const [nick, setNick] = useState(null); // 新用户登录成功后进入起昵称这一步
 
   async function send() {
     setErr(''); setMsg(''); setBusy(true);
@@ -28,9 +29,35 @@ export default function LoginForm({ next }) {
       const r = await fetch('/api/auth/verify', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ phone, code }) });
       const j = await r.json();
       if (!r.ok) throw new Error(j.error);
-      location.href = j.isNew ? `/me?welcome=1&next=${encodeURIComponent(next)}` : next;
+      if (j.isNew) { setNick(j.user?.nickname || ''); setBusy(false); return; }
+      location.href = next;
     } catch (e) { setErr(e.message); setBusy(false); }
   }
+
+  async function saveNick(e) {
+    e.preventDefault();
+    setErr(''); setBusy(true);
+    try {
+      const r = await fetch('/api/me', { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ nickname: nick }) });
+      const j = await r.json();
+      if (!r.ok) throw new Error(j.error);
+      location.href = next;
+    } catch (e) { setErr(e.message); setBusy(false); }
+  }
+
+  if (nick !== null) return (
+    <form className="card stack" onSubmit={saveNick} style={{ maxWidth: 440 }}>
+      <h3>注册成功，给自己起个昵称</h3>
+      <p className="muted small">昵称会显示在排行榜上；你第一个生成的书籍回顾，页面上会写“首位生成者：你的昵称”。以后可以在“我的”页面修改。</p>
+      <div className="field">
+        <label htmlFor="nick">昵称（2–16 个字）</label>
+        <input id="nick" className="input" value={nick} onChange={e => setNick(e.target.value)} maxLength={16} autoFocus />
+      </div>
+      {err && <p className="err">{err}</p>}
+      <button className="btn primary" type="submit" disabled={busy || [...nick.trim()].length < 2}>保存并开始</button>
+      <a className="muted small" href={next}>先跳过，用默认昵称</a>
+    </form>
+  );
 
   return (
     <form className="card stack" onSubmit={verify} style={{ maxWidth: 440 }}>

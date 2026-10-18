@@ -122,14 +122,6 @@ button,input,textarea,select{font:inherit;color:inherit}
 .sec{padding-block:48px;border-top:1px solid var(--line)}
 .sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin-bottom:24px;flex-wrap:wrap}
 .sec-head h2{font-size:clamp(24px,3vw,30px)}
-.flow{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px;counter-reset:f}
-.flow div{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:4px}
-.flow .t{font-family:var(--f-mono);font-size:12px;color:var(--tension)}
-.flow b{font-family:var(--f-display);font-size:17px}
-.flow p{font-size:13px;color:var(--muted);line-height:1.6}
-.method{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
-.method div{font-size:14px;color:var(--muted);background:var(--surface);border:1px dashed var(--line);border-radius:var(--r);padding:12px 14px}
-.method b{color:var(--ink);font-weight:500}
 
 .books{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
 .book{display:flex;flex-direction:column;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;text-decoration:none;color:var(--ink);min-height:180px}
@@ -148,6 +140,20 @@ button,input,textarea,select{font:inherit;color:inherit}
 .cat .subs{display:flex;flex-wrap:wrap;gap:6px}
 .cat .subs a{font-size:13px;color:var(--muted);text-decoration:none;border:1px solid var(--line);border-radius:99px;padding:1px 9px}
 .cat .subs a:hover{color:var(--accent);border-color:var(--accent)}
+/* 悬停（或键盘聚焦）时在方框下方展开这个大类下的书 */
+.cat{position:relative;outline:none;transition:border-color .15s}
+.cat:hover,.cat:focus-within{border-color:var(--accent)}
+.cat-books{display:none;position:absolute;left:-1px;right:-1px;top:calc(100% - 8px);z-index:20;background:var(--surface);border:1px solid var(--accent);border-top:0;border-radius:0 0 var(--r) var(--r);padding:8px 16px 14px;box-shadow:0 22px 30px -12px rgba(13,104,102,.22)}
+.cat:hover .cat-books,.cat:focus-within .cat-books{display:block}
+.cat:hover,.cat:focus-within{z-index:21;border-bottom-left-radius:0;border-bottom-right-radius:0}
+.cat-books ul{list-style:none;margin:0 0 8px;padding:0;display:flex;flex-direction:column}
+.cat-books li a{display:flex;flex-direction:column;padding:7px 0;border-top:1px dashed var(--line);text-decoration:none;color:var(--ink)}
+.cat-books li:first-child a{border-top:0}
+.cat-books li a b{font-family:var(--f-display);font-size:15px}
+.cat-books li a span{font-size:12px;color:var(--muted)}
+.cat-books li a:hover b{color:var(--accent)}
+/* 触屏没有悬停：直接把书目列在方框里 */
+@media (hover:none){.cat-books{display:block;position:static;border:0;box-shadow:none;padding:6px 0 0;background:none}.cat:hover,.cat:focus-within{border-bottom-left-radius:var(--r);border-bottom-right-radius:var(--r)}}
 
 .plans{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 .plan{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;display:flex;flex-direction:column;gap:12px}
@@ -195,8 +201,7 @@ button,input,textarea,select{font:inherit;color:inherit}
 
 @media (max-width:860px){
   .hero{grid-template-columns:minmax(0,1fr);gap:32px;padding-block:32px}
-  .flow{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .plans,.method{grid-template-columns:minmax(0,1fr)}
+  .plans{grid-template-columns:minmax(0,1fr)}
 }
 @media (max-width:560px){
   .site-head nav a{padding:6px 6px;font-size:14px}

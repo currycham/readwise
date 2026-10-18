@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { CATEGORIES } from '../config/categories.mjs';
-import { categoryCounts, countBooks, getBookBySlug, listBooks } from '../lib/books.mjs';
+import { booksByTop, categoryCounts, countBooks, getBookBySlug, listBooks } from '../lib/books.mjs';
 import { quotaSummary } from '../lib/credits.mjs';
 import EarnRules from './components/EarnRules';
 import PlanCards from './components/PlanCards';
@@ -10,7 +10,7 @@ import { getUser } from './lib/session';
 
 export const dynamic = 'force-dynamic';
 
-// 一份书籍回顾的全部模块：首页示例卡片和“一份书籍回顾里有什么”共用
+// 一份书籍回顾的全部模块，列在首页右侧的示例卡片里
 const FLOW = [
   ['先看', '推荐', '一句话说清这本书解决什么问题、值不值得读。'],
   ['15–20′', '双人播客', '两位主持人对谈，先建立整体印象。'],
@@ -30,6 +30,7 @@ export default async function Home() {
   const recent = listBooks({ sort: 'recent', limit: 8 });
   const popular = listBooks({ sort: 'popular', limit: 8 });
   const counts = categoryCounts();
+  const byTop = booksByTop();
   const quota = user ? quotaSummary(user) : null;
   const sample = getBookBySlug(SAMPLE_SLUG) || popular[0] || null;
 
@@ -41,7 +42,7 @@ export default async function Home() {
             <div className="label">Readwise · 书籍精读回顾</div>
             <h1>60 分钟，<em>吃透</em>一本书</h1>
             <p className="lead">
-              输入书名，AI 按<b>《如何阅读一本书》</b>和<b>《学习之道》</b>为你生成一份书籍回顾：一句话推荐、15–20 分钟双人播客、知识块精读、闯关检测和内化练习。读完还能<b>向“作者”提问</b>，由 AI 模拟作者，基于书的内容回答你。
+              AI 参考<b>《如何阅读一本书》</b>的阅读方法和<b>《学习之道》</b>的学习思想，把一本书梳理成一份书籍回顾：先听一段双人播客，再逐块精读、闯关检测、联系自己。读完还能<b>向“作者”提问</b>，由 AI 模拟作者作答。
             </p>
             <SearchBox loggedIn={!!user} />
             <div className="meta">
@@ -67,19 +68,6 @@ export default async function Home() {
 
       <section className="sec">
         <div className="wrap">
-          <div className="sec-head"><h2>一份书籍回顾里有什么</h2><span className="muted small">精读部分约 60 分钟，读完随时可以向“作者”提问</span></div>
-          <div className="flow">
-            {FLOW.map(([t, b, p]) => <div key={b}><span className="t">{t}</span><b>{b}</b><p>{p}</p></div>)}
-          </div>
-          <div className="method">
-            <div><b>《如何阅读一本书》</b>：整体在谈什么、细节怎么说、有道理吗、与我何干。四个问题串起检视、分析、检测、内化四步。</div>
-            <div><b>《学习之道》</b>：限时专注、组块理解、先回想再看答案、交错练习、间隔复习，把“读过”变成“记住”。</div>
-          </div>
-        </div>
-      </section>
-
-      <section className="sec">
-        <div className="wrap">
           <div className="sec-head"><h2>大家最近在读</h2><Link href="/library" className="small">查看全部书库 →</Link></div>
           {recent.length ? (
             <div className="books">{recent.map(b => <BookCard key={b.id} b={b} />)}</div>
@@ -97,16 +85,29 @@ export default async function Home() {
 
       <section className="sec">
         <div className="wrap">
-          <div className="sec-head"><h2>按问题找书</h2><span className="muted small">每本书都按它能帮你解决的问题归类</span></div>
+          <div className="sec-head"><h2>按问题找书</h2><span className="muted small">每本书都按它能帮你解决的问题归类，鼠标移到方框上可以看到书目</span></div>
           <div className="cats">
-            {CATEGORIES.map(c => (
-              <div className="cat" key={c.id}>
-                <h3><Link href={`/library?top=${encodeURIComponent(c.name)}`}>{c.name}</Link><small>{counts[c.name] || 0} 本</small></h3>
-                <div className="subs">
-                  {c.subs.map(s => <Link key={s} href={`/library?top=${encodeURIComponent(c.name)}&sub=${encodeURIComponent(s)}`}>{s}{counts[`${c.name}/${s}`] ? ` ${counts[`${c.name}/${s}`]}` : ''}</Link>)}
+            {CATEGORIES.map(c => {
+              const books = byTop[c.name] || [], n = counts[c.name] || 0;
+              return (
+                <div className="cat" key={c.id} tabIndex={0}>
+                  <h3><Link href={`/library?top=${encodeURIComponent(c.name)}`}>{c.name}</Link><small>{n} 本</small></h3>
+                  <div className="subs">
+                    {c.subs.map(s => <Link key={s} href={`/library?top=${encodeURIComponent(c.name)}&sub=${encodeURIComponent(s)}`}>{s}{counts[`${c.name}/${s}`] ? ` ${counts[`${c.name}/${s}`]}` : ''}</Link>)}
+                  </div>
+                  <div className="cat-books">
+                    {books.length ? (
+                      <>
+                        <ul>{books.map(b => (
+                          <li key={b.slug}><Link href={`/b/${encodeURIComponent(b.slug)}`}><b>{b.title}</b><span>{b.author}{b.douban ? ` · 豆瓣 ${b.douban}` : ''}</span></Link></li>
+                        ))}</ul>
+                        {n > books.length && <Link className="small" href={`/library?top=${encodeURIComponent(c.name)}`}>查看全部 {n} 本 →</Link>}
+                      </>
+                    ) : <p className="muted small">这里还没有书。在上方输入书名，生成第一本。</p>}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>

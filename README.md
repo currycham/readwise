@@ -50,6 +50,17 @@ DEPLOY_HOST=ubuntu@111.229.194.119 DEPLOY_KEY=~/.ssh/waywise_ed25519 deploy/depl
 
 4. 以后每次更新：`DEPLOY_HOST=ubuntu@111.229.194.119 DEPLOY_KEY=~/.ssh/waywise_ed25519 deploy/deploy.sh`
 
+### 接入腾讯云短信
+
+1. 腾讯云控制台 → 短信 → 国内短信：
+   - **签名**：类型选"网站"，填已备案的域名 waywise.tech，签名内容和备案主体一致（个人备案用个人名义）。
+   - **正文模板**：类型选"验证码"，例如 `您的验证码为{1}，{2}分钟内有效，如非本人操作请忽略。`（只有 `{1}` 的模板要设 `SMS_TEMPLATE_PARAMS=1`）。
+   - 应用管理里记下 **SDK AppID**。
+2. 访问管理 → API 密钥：建议新建子用户，只授权 `QcloudSMSFullAccess`（以后开内容安全再加 `QcloudTMSFullAccess`），拿到 SecretId / SecretKey。
+3. 在 `.env.production` 里填：`SMS_PROVIDER=tencent`、`TENCENTCLOUD_SECRET_ID`、`TENCENTCLOUD_SECRET_KEY`、`SMS_SDK_APP_ID`、`SMS_SIGN_NAME`（签名内容，不带【】）、`SMS_TEMPLATE_ID`。
+4. 部署：`deploy/deploy.sh --env .env.production`，然后在服务器上发一条测试短信：
+   `cd /srv/readwise/app && sudo -u readwise npm run sms-test -- 你的手机号`
+
 看日志：`ssh ubuntu@111.229.194.119 sudo journalctl -u readwise-web -u readwise-worker -f`（短信还是 dev 模式时，验证码也打印在这里）。
 
 只想看引擎效果、不起网站时，`npm run preview` 打开旧的本地预览服务（http://localhost:5173）。
