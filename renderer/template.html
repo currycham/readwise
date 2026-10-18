@@ -206,6 +206,7 @@ footer{color:var(--muted);font-size:13px;display:flex;flex-direction:column;gap:
 .sitebar a:hover{color:var(--ink)}
 .sitebar b{font-family:var(--f-display);font-size:18px;color:var(--ink);margin-right:14px}
 .db{font-family:var(--f-mono);font-size:13px;color:var(--ok)}
+.db a{color:inherit;text-decoration-color:var(--line)}
 .report{display:flex;flex-direction:column;gap:8px;max-width:520px}
 footer a{color:var(--muted)}
 
@@ -398,7 +399,7 @@ const bk=B.book;
 document.title=bk.title+' 精读手册';
 $('#title').textContent=bk.title;
 $('#enTitle').textContent=[bk.original_title,bk.author_en].filter(Boolean).join(' · ')||'精读手册';
-$('#by').innerHTML=esc(bk.author)+' 著'+(bk.douban&&bk.douban.rating?`　<span class="db">豆瓣 ${Number(bk.douban.rating).toFixed(1)}${bk.douban.count?`（${Number(bk.douban.count).toLocaleString()} 人评价）`:''}</span>`:'')+(SITE&&SITE.first_by?`　<span style="font-size:13px">首位生成：${SITE.first_by_id?`<a href="/u/${Number(SITE.first_by_id)}">${esc(SITE.first_by)}</a>`:esc(SITE.first_by)}</span>`:'');
+$('#by').innerHTML=esc(bk.author)+' 著'+(bk.douban&&bk.douban.rating?`　<span class="db">${/^\d+$/.test(bk.douban.id||'')?`<a href="https://book.douban.com/subject/${bk.douban.id}/" target="_blank" rel="noopener nofollow">豆瓣 ${Number(bk.douban.rating).toFixed(1)}</a>`:`豆瓣 ${Number(bk.douban.rating).toFixed(1)}`}${bk.douban.count?`（${Number(bk.douban.count).toLocaleString()} 人评价）`:''}</span>`:'')+(SITE&&SITE.first_by?`　<span style="font-size:13px">首位生成：${SITE.first_by_id?`<a href="/u/${Number(SITE.first_by_id)}">${esc(SITE.first_by)}</a>`:esc(SITE.first_by)}</span>`:'');
 if(SITE){const sb=$('#sitebar');sb.hidden=false;
   sb.innerHTML=`<span><a href="/"><b>Readwise</b></a><a href="/library">书库</a></span><span>${SITE.viewer?`<a href="/me">${esc(SITE.viewer.nickname)}${SITE.viewer.level?` · ${esc(SITE.viewer.level)}`:''}</a>`:`<a href="/login?next=${here}">登录 / 注册</a>`}</span>`;
   $('#report').hidden=false}

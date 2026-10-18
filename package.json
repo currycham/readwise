@@ -26,7 +26,8 @@
     "mail-test": "node --env-file-if-exists=.env scripts/mail-test.mjs",
     "set-first-user": "node --env-file-if-exists=.env scripts/set-first-user.mjs",
     "revoice": "node --env-file-if-exists=.env scripts/revoice.mjs",
-    "balance-check": "node --env-file-if-exists=.env scripts/balance-check.mjs"
+    "balance-check": "node --env-file-if-exists=.env scripts/balance-check.mjs",
+    "douban-refresh": "node --env-file-if-exists=.env scripts/douban-refresh.mjs"
   },
   "dependencies": {
     "better-sqlite3": "12.4.1",

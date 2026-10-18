@@ -80,6 +80,9 @@ $SSH "sudo chown -R readwise:readwise $BASE/app $BASE/data"
 echo "==> 安装依赖并构建"
 $SSH "cd $BASE/app && sudo -u readwise -H bash -c 'export PATH=/usr/local/bin:/usr/bin:/bin; npm ci --no-audit --no-fund && npm run build'"
 
+# 定时任务随代码更新
+$SSH "sudo install -m 644 $BASE/app/deploy/readwise-cron /etc/cron.d/readwise"
+
 echo "==> 重启服务"
 # worker 会等当前任务做完再退出，最长可能要十几分钟；网站先重启，worker 放后台重启
 $SSH "sudo systemctl restart readwise-web && sudo systemctl restart --no-block readwise-worker"

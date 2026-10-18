@@ -24,7 +24,7 @@ export async function POST(req) {
       case 'book_douban': {
         const rating = f.rating === '' ? null : Number(f.rating);
         if (rating != null && !(rating >= 0 && rating <= 10)) throw new Error('评分需要在 0–10 之间');
-        updateBook(id, { douban_rating: rating, douban_count: f.count === '' ? null : Math.round(Number(f.count)), douban_via: rating == null ? null : 'admin' });
+        updateBook(id, { douban_rating: rating, douban_count: f.count === '' ? null : Math.round(Number(f.count)), douban_via: rating == null ? null : 'admin', douban_id: null });
         break;
       }
       case 'book_category': {

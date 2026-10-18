@@ -36,7 +36,7 @@ export default async function AdminBooks({ searchParams }) {
                 <input className="input num" name="count" defaultValue={b.douban_count ?? ''} size={6} aria-label="评价人数" />
                 <button className="btn sm">存</button>
               </form>
-              <span className="muted small">{b.douban_via === 'admin' ? '人工' : b.douban_via ? '检索' : ''}</span>
+              <span className="muted small">{{ admin: '人工', douban: '豆瓣', search: '检索' }[b.douban_via] || ''}</span>
             </td>
             <td>{b.podcast_status}{b.podcast_status !== 'none' && (
               <form method="post" action="/api/admin" className="inline-form"><input type="hidden" name="action" value="book_podcast_reset" /><input type="hidden" name="id" value={b.id} /><button className="btn sm">重置</button></form>)}</td>

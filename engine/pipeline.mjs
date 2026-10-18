@@ -3,6 +3,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { dataPath } from './paths.mjs';
 import { EVIDENCE_THRESHOLD, ROLES } from '../config/models.mjs';
+import { doubanLookup } from './douban.mjs';
 import { chatJSON } from './llm.mjs';
 import * as P from './prompts.mjs';
 import { SCHEMA_VERSION, validatePage } from './schema.mjs';
@@ -125,8 +126,12 @@ export async function buildBookPage(o) {
   }
 
   page.schema_version = SCHEMA_VERSION;
+  // 豆瓣评分优先直接取自豆瓣；取不到再用检索资料里抽取的
+  const live = await doubanLookup({ title: page.book.title || title, author: page.book.author || author }, { log });
   const db = assessment.douban;
-  if (db && typeof db.rating === 'number' && db.rating > 0 && db.rating <= 10) {
+  if (live) {
+    page.book.douban = { rating: live.rating, count: live.count, id: live.id, via: 'douban', at: new Date().toISOString().slice(0, 10) };
+  } else if (db && typeof db.rating === 'number' && db.rating > 0 && db.rating <= 10) {
     page.book.douban = { rating: db.rating, count: Number.isInteger(db.count) ? db.count : null, via: 'search', at: new Date().toISOString().slice(0, 10) };
   }
   page.meta = {

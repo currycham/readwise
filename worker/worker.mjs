@@ -41,7 +41,7 @@ async function runGenerate(job) {
       const id = job.input.regenerate;
       const d = r.page.book.douban;
       updateBook(id, { page_json: JSON.stringify(r.page), model: r.model, check_score: r.check?.score ?? null, one_line: r.page.recommend?.one_line || '',
-        categories: JSON.stringify(r.page.book.categories || []), ...(d ? { douban_rating: d.rating, douban_count: d.count, douban_via: 'search' } : {}) });
+        categories: JSON.stringify(r.page.book.categories || []), ...(d ? { douban_rating: d.rating, douban_count: d.count, douban_via: d.via || 'search', douban_id: d.id || null, douban_at: d.via === 'douban' ? new Date().toISOString() : null } : {}) });
       const b = getDb().prepare('SELECT slug FROM books WHERE id = ?').get(id);
       return finishJob(job.id, { status: 'done', bookId: id, result: { slug: b.slug, regenerated: true } });
     }
