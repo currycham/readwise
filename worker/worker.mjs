@@ -34,7 +34,8 @@ async function runGenerate(job) {
     // 书页公开展示，入库前过一遍内容安全审核；不通过则任务失败（积分自动退回）
     setProgress(job.id, '内容安全审核…');
     const mod = await checkLongText(collectText(r.page).join('\n'));
-    if (!mod.ok) throw new Error(`生成内容未通过内容安全审核（${mod.label || '违规'}），已退回积分`);
+    const modInfo = mod.ok ? null : { label: mod.label, subLabel: mod.subLabel, keywords: mod.keywords, snippet: mod.snippet };
+    if (modInfo && job.input.regenerate) throw new Error(`重新生成的内容未通过内容安全审核（${mod.label}），原书页保持不变`);
     if (job.input.regenerate) {
       // 管理员重新生成：覆盖原书页内容，保留首位生成者、浏览数和播客
       const id = job.input.regenerate;
@@ -45,6 +46,12 @@ async function runGenerate(job) {
       return finishJob(job.id, { status: 'done', bookId: id, result: { slug: b.slug, regenerated: true } });
     }
     const { book, existed } = insertBook(r.page, { userId: job.user_id, model: r.model, source: r.source, checkScore: r.check?.score, requestedTitle: title });
+    if (modInfo && !existed) {
+      // 审核不通过时不直接丢弃（常有误判）：书页隐藏保存，等管理员在后台复核
+      updateBook(book.id, { status: 'hidden' });
+      console.warn(`任务 ${job.id} 待复核：${JSON.stringify(modInfo)}`);
+      return finishJob(job.id, { status: 'review', bookId: book.id, result: { moderation: modInfo } });
+    }
     const reward = existed ? 0 : rewardGenerate(job, book.id);
     finishJob(job.id, { status: 'done', bookId: book.id, result: { slug: book.slug, existed, reward } });
   } finally {

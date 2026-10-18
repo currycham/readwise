@@ -11,7 +11,7 @@ import { LogoutButton, NicknameForm } from './MeForms';
 export const metadata = { title: '我的账户' };
 export const dynamic = 'force-dynamic';
 
-const STATUS = { queued: '排队中', running: '生成中', done: '已完成', failed: '失败', insufficient: '资料不足', ambiguous: '书名有歧义' };
+const STATUS = { queued: '排队中', running: '生成中', done: '已完成', failed: '失败', insufficient: '资料不足', ambiguous: '书名有歧义', review: '内容复核中' };
 const REASON = { reward_complete: '读完一本', reward_generate: '生成新书', reward_contrib: '你生成的书被人读完', signup: '注册赠送', generate: '生成书籍', ask: '提问', refund: '退回', admin: '管理员调整', purchase: '充值' };
 
 export default async function Me({ searchParams }) {

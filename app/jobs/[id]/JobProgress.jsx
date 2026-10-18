@@ -60,6 +60,9 @@ export default function JobProgress({ id }) {
           <a className="btn" href={`/new?title=${encodeURIComponent(j.title)}`}>填写作者重新生成</a>
         </div>
       )}
+      {j.status === 'review' && (
+        <div className="card stack"><h3>书页已生成，正在人工复核</h3><p className="muted">自动内容审核提示需要复核，通常一天内处理完。通过后会出现在“我的账户”里；未通过会退回积分。</p></div>
+      )}
       {j.status === 'failed' && (
         <div className="card stack"><h3>生成失败</h3><p className="muted">{j.error}</p><a className="btn" href={`/new?title=${encodeURIComponent(j.title)}`}>重试</a></div>
       )}

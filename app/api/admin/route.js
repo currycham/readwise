@@ -4,7 +4,8 @@ import { isValidCategory } from '../../../config/categories.mjs';
 import { updateBook } from '../../../lib/books.mjs';
 import { addCredits } from '../../../lib/credits.mjs';
 import { getDb, tx } from '../../../lib/db.mjs';
-import { retryJob } from '../../../lib/jobs.mjs';
+import { approveJob, rejectJob, retryJob } from '../../../lib/jobs.mjs';
+import { rewardGenerate } from '../../../lib/rewards.mjs';
 import { addDays } from '../../../lib/time.mjs';
 import { sameOrigin } from '../../lib/http';
 import { getUser } from '../../lib/session';
@@ -76,6 +77,8 @@ export async function POST(req) {
         if (f.banned === '1') db.prepare('DELETE FROM sessions WHERE user_id = ?').run(id);
         break;
       case 'job_retry': retryJob(id); break;
+      case 'job_approve': { const { job, bookId } = approveJob(id); rewardGenerate(job, bookId); break; }
+      case 'job_reject': rejectJob(id); break;
       case 'report_resolve': db.prepare("UPDATE reports SET status = 'resolved' WHERE id = ?").run(id); break;
       default: throw new Error('未知操作');
     }
