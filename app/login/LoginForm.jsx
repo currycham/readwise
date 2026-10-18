@@ -82,7 +82,7 @@ export default function LoginForm({ next, methods = ['email'] }) {
       {msg && <p className="ok">{msg}</p>}
       {err && <p className="err">{err}</p>}
       <button className="btn primary" type="submit" disabled={busy || !ready || code.length !== 6}>登录</button>
-      <p className="muted small">登录即表示你同意用户协议和隐私政策。你的{label}只用来登录，不会公开显示。</p>
+      <p className="muted small">登录即表示你同意<a href="/terms" target="_blank">用户协议</a>和<a href="/privacy" target="_blank">隐私政策</a>。你的{label}只用来登录，不会公开显示。</p>
     </form>
   );
 }

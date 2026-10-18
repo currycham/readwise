@@ -232,3 +232,7 @@ button,input,textarea,select{font:inherit;color:inherit}
 .lvbar{height:8px;border-radius:99px;background:var(--line);overflow:hidden}
 .lvbar i{display:block;height:100%;background:var(--accent)}
 @media (max-width:760px){.earn,.packs{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* 用户协议、隐私政策 */
+.legal section h2{font-size:20px;margin:8px 0 10px}
+.legal section ul{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:6px}
+.legal section p{margin:6px 0}

@@ -78,6 +78,7 @@ export const ROLES = {
   assess: env.ROLE_ASSESS || 'deepseek-pro',     // 资料充分度打分（资料 + 模型认知交叉验证）
   extract: env.ROLE_EXTRACT || 'deepseek-flash', // 上传原文的分块抽取
   generate: env.ROLE_GENERATE || 'hy4',          // 生成书页（2026-10 对比：最快、最便宜、内容最充实）
+  generateFallback: env.ROLE_GENERATE_FALLBACK || 'deepseek-pro', // 生成模型输出被截断或不是合法 JSON 时换它重试
   check: env.ROLE_CHECK || 'deepseek-pro',       // 质检（与生成模型不同家族，交叉审核）
   repair: env.ROLE_REPAIR || 'hy4',              // 按质检意见修正（流水线实际使用生成模型）
   ask: env.ROLE_ASK || 'hy3',                    // 问作者

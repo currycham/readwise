@@ -67,10 +67,18 @@ export async function buildBookPage(o) {
   log(`用 ${genModel} 生成书页…`);
   const title = assessment.identified?.title || o.title;
   const author = assessment.identified?.author || o.author || '';
-  const gen = step('generate', await chatJSON({
-    alias: genModel, task: 'generate', book: title, temperature: 0.6,
-    messages: [{ role: 'system', content: P.GENERATE_SYSTEM }, { role: 'user', content: P.generateUser({ title, author, assessment, notes }) }],
-  }));
+  const genMessages = [{ role: 'system', content: P.GENERATE_SYSTEM }, { role: 'user', content: P.generateUser({ title, author, assessment, notes }) }];
+  let usedModel = genModel, gen;
+  try {
+    gen = step('generate', await chatJSON({ alias: genModel, task: 'generate', book: title, temperature: 0.6, messages: genMessages }));
+  } catch (e) {
+    // hy4 偶尔写超长被截断，或输出不是合法 JSON：换备用模型重写一次，而不是让整个任务失败
+    const fb = ROLES.generateFallback;
+    if (!fb || fb === genModel) throw e;
+    log(`${genModel} 生成失败（${e.message.slice(0, 60)}），改用 ${fb} 重新生成…`);
+    usedModel = fb;
+    gen = step('generate-fallback', await chatJSON({ alias: fb, task: 'generate', book: title, temperature: 0.6, messages: genMessages }));
+  }
   let page = shuffleQuiz(gen.data);
 
   // 3. 结构校验，不通过就让同一模型修一次
@@ -78,7 +86,7 @@ export async function buildBookPage(o) {
   if (errors.length) {
     log(`结构校验发现 ${errors.length} 处问题，修正…`);
     const fix = step('fix-structure', await chatJSON({
-      alias: genModel, task: 'fix-structure', book: title,
+      alias: usedModel, task: 'fix-structure', book: title,
       messages: [
         { role: 'system', content: P.GENERATE_SYSTEM },
         { role: 'user', content: `下面的书页 JSON 有结构问题，请修正后输出完整 JSON：\n${errors.join('\n')}\n\n${JSON.stringify(page)}` },
@@ -101,13 +109,18 @@ export async function buildBookPage(o) {
     const serious = (check.issues || []).filter(i => i.severity === 'high' || i.severity === 'medium');
     if (serious.length) {
       log(`质检发现 ${serious.length} 处需要修正，修正中…`);
-      const r = step('repair', await chatJSON({
-        alias: genModel, task: 'repair', book: title,
-        messages: [{ role: 'system', content: P.REPAIR_SYSTEM }, { role: 'user', content: P.repairUser({ page, issues: serious }) }],
-      }));
-      const repaired = shuffleQuiz(r.data);
-      const repErrors = validatePage(repaired);
-      if (repErrors.length <= errors.length) { page = repaired; errors = repErrors; }
+      try {
+        const r = step('repair', await chatJSON({
+          alias: usedModel, task: 'repair', book: title,
+          messages: [{ role: 'system', content: P.REPAIR_SYSTEM }, { role: 'user', content: P.repairUser({ page, issues: serious }) }],
+        }));
+        const repaired = shuffleQuiz(r.data);
+        const repErrors = validatePage(repaired);
+        if (repErrors.length <= errors.length) { page = repaired; errors = repErrors; }
+      } catch (e) {
+        // 修正失败时保留质检前的书页（结构已通过校验），不让整个任务失败
+        log(`修正失败（${e.message.slice(0, 60)}），保留修正前的版本`);
+      }
     }
   }
 
@@ -118,7 +131,7 @@ export async function buildBookPage(o) {
   }
   page.meta = {
     generated_at: new Date().toISOString(),
-    model: genModel,
+    model: usedModel,
     source,
     evidence_score: assessment.total,
     check_score: check?.score ?? null,
@@ -127,11 +140,12 @@ export async function buildBookPage(o) {
   return finish({ status: errors.length ? 'invalid' : 'ok', page, assessment, check, steps, source });
 
   async function finish(result) {
-    const out = { ...result, title: o.title, model: genModel, ms: Date.now() - t0, cost: steps.reduce((s, x) => s + (x.cost || 0), 0) };
+    const model = result.page?.meta?.model || genModel; // 换过备用模型时记实际用的那个
+    const out = { ...result, title: o.title, model, ms: Date.now() - t0, cost: steps.reduce((s, x) => s + (x.cost || 0), 0) };
     const dir = dataPath('books', slugify(o.title));
     await mkdir(dir, { recursive: true });
-    if (result.page) await writeFile(join(dir, `${genModel}.json`), JSON.stringify(result.page, null, 2));
-    await writeFile(join(dir, `${genModel}.run.json`), JSON.stringify({ ...out, page: undefined }, null, 2));
+    if (result.page) await writeFile(join(dir, `${model}.json`), JSON.stringify(result.page, null, 2));
+    await writeFile(join(dir, `${model}.run.json`), JSON.stringify({ ...out, page: undefined }, null, 2));
     log(`完成：${out.status}，用时 ${(out.ms / 1000).toFixed(0)} 秒，成本 ¥${out.cost.toFixed(3)}`);
     return out;
   }

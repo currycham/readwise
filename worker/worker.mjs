@@ -9,6 +9,7 @@ import { podcastScript, synthesizePodcast } from '../engine/podcast.mjs';
 import { validatePage } from '../engine/schema.mjs';
 import { insertBook, updateBook } from '../lib/books.mjs';
 import { getDb } from '../lib/db.mjs';
+import { checkLongText, collectText } from '../lib/moderation.mjs';
 import { rewardGenerate } from '../lib/rewards.mjs';
 import { claimJob, finishJob, recordUsage, requeueStale, setProgress } from '../lib/jobs.mjs';
 
@@ -30,6 +31,10 @@ async function runGenerate(job) {
     }
     const errors = validatePage(r.page);
     if (errors.length) throw new Error(`生成内容未通过结构校验：${errors.slice(0, 3).join('；')}`);
+    // 书页公开展示，入库前过一遍内容安全审核；不通过则任务失败（积分自动退回）
+    setProgress(job.id, '内容安全审核…');
+    const mod = await checkLongText(collectText(r.page).join('\n'));
+    if (!mod.ok) throw new Error(`生成内容未通过内容安全审核（${mod.label || '违规'}），已退回积分`);
     if (job.input.regenerate) {
       // 管理员重新生成：覆盖原书页内容，保留首位生成者、浏览数和播客
       const id = job.input.regenerate;
@@ -64,6 +69,9 @@ async function runPodcast(job) {
       s = await podcastScript(page);
       updateBook(book.id, { podcast_script: JSON.stringify(s.script) });
     }
+    // 播客稿配音前先审核，不通过就不花配音的钱
+    const mod = await checkLongText(collectText(s.script).join('\n'));
+    if (!mod.ok) throw new Error(`播客稿未通过内容安全审核（${mod.label || '违规'}）`);
     const file = dataPath('media', 'podcast', `${book.id}.mp3`);
     const a = await synthesizePodcast(s.script, file, { book: book.title, onProgress: (d, n) => setProgress(job.id, `配音 ${d}/${n}`) });
     updateBook(book.id, { podcast_status: 'ready', podcast_file: file, podcast_ms: a.durationMs });
