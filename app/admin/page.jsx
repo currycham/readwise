@@ -1,11 +1,13 @@
 import { LIMITS } from '../../config/plans.mjs';
+import { loadBalanceState } from '../../lib/balance.mjs';
 import { todayCost } from '../../lib/credits.mjs';
 import { getDb } from '../../lib/db.mjs';
-import { addDays, startOfTodayBJ } from '../../lib/time.mjs';
+import { addDays, fmtBJ, startOfTodayBJ } from '../../lib/time.mjs';
 
 const TASK = { search: '检索', assess: '资料判定', generate: '生成', 'fix-structure': '结构修正', check: '质检', repair: '修正', extract: '原文抽取', ask: '问作者', podcast: '播客稿', tts: '配音' };
 
-export default function AdminHome() {
+export default async function AdminHome() {
+  const bal = await loadBalanceState();
   const db = getDb();
   const today = startOfTodayBJ();
   const week = addDays(today, -6);
@@ -32,6 +34,21 @@ export default function AdminHome() {
         <div className="row" style={{ justifyContent: 'space-between' }}><span>今日预算使用</span><span className="num">¥{cost.toFixed(2)} / ¥{LIMITS.dailyBudgetYuan}</span></div>
         <div className="bar"><i className={pct > 80 ? 'warn' : ''} style={{ width: `${pct}%` }} /></div>
         <p className="muted small">达到预算后，当天暂停生成新书、播客和提问，已有内容照常访问。预算在环境变量 DAILY_BUDGET_YUAN 里设置。</p>
+      </div>
+      <div className="card stack">
+        <div className="row" style={{ justifyContent: 'space-between' }}><span>API 余额</span><span className="muted small">{bal.at ? `检查于 ${fmtBJ(bal.at)}，每 3 小时一次，低于阈值会发邮件` : '还没有检查过（服务器上每 3 小时自动检查）'}</span></div>
+        {bal.results?.length ? (
+          <div className="tbl"><table><thead><tr><th>服务</th><th>用途</th><th>余额</th><th>提醒阈值</th><th></th></tr></thead><tbody>
+            {bal.results.map(r => (
+              <tr key={r.id}>
+                <td>{r.name}</td><td className="muted small">{r.use}</td>
+                <td className="num" style={{ color: r.low || r.error ? 'var(--bad)' : undefined }}>{r.error ? '查询失败' : `¥${r.balance}`}</td>
+                <td className="num">¥{r.min}</td>
+                <td><a href={r.console} target="_blank" rel="noopener noreferrer" className="small">去充值 →</a></td>
+              </tr>
+            ))}
+          </tbody></table></div>
+        ) : null}
       </div>
       <div className="stats">{stats.map(([k, v]) => <div className="stat" key={k}><div className="v">{v}</div><div className="k">{k}</div></div>)}</div>
       <div className="row" style={{ alignItems: 'flex-start' }}>

@@ -1,0 +1,5 @@
+# Readwise 定时任务：由 setup-server.sh 安装到 /etc/cron.d/readwise
+# 每 3 小时检查一次各家 API 余额，低于阈值发邮件
+SHELL=/bin/sh
+PATH=/usr/local/bin:/usr/bin:/bin
+20 */3 * * * readwise cd /srv/readwise/app && READWISE_DATA_DIR=/srv/readwise/data node --env-file=.env scripts/balance-check.mjs >> /srv/readwise/data/balance.log 2>&1

@@ -38,8 +38,9 @@ install -m 644 "$HERE/readwise-web.service" "$HERE/readwise-worker.service" /etc
 systemctl daemon-reload
 systemctl enable readwise-web readwise-worker >/dev/null
 
-echo "==> 每日备份"
+echo "==> 定时任务（每日备份、余额检查）"
 install -m 755 "$HERE/readwise-backup" /etc/cron.daily/readwise-backup
+install -m 644 "$HERE/readwise-cron" /etc/cron.d/readwise
 
 echo "==> Caddy"
 if [ -f /etc/caddy/Caddyfile ] && command -v caddy >/dev/null; then
