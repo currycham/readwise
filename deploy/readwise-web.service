@@ -1,0 +1,21 @@
+[Unit]
+Description=Readwise 网站（Next.js）
+After=network.target
+
+[Service]
+Type=simple
+User=readwise
+Group=readwise
+WorkingDirectory=/srv/readwise/app
+Environment=NODE_ENV=production
+Environment=READWISE_DATA_DIR=/srv/readwise/data
+# 只监听本机，由 Caddy 对外提供 HTTPS
+ExecStart=/usr/local/bin/node --env-file-if-exists=.env node_modules/next/dist/bin/next start -H 127.0.0.1 -p 3000
+Restart=always
+RestartSec=3
+# 短信 dev 模式下验证码打印在这里：journalctl -u readwise-web -f
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

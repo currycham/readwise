@@ -1,0 +1,29 @@
+# Readwise 站点：由 setup-server.sh 复制到 /etc/caddy/readwise.caddy，并在主 Caddyfile 里 import
+# Caddy 会自动申请和续期 readwise.waywise.tech 的 HTTPS 证书（前提：DNS 已解析到本机，80/443 端口已放行）
+readwise.waywise.tech {
+	encode zstd gzip
+
+	# 上传原文（txt/pdf/epub）最大 30MB，与 next.config.mjs 一致
+	request_body {
+		max_size 30MB
+	}
+
+	# 生成任务和问作者是流式返回，关闭缓冲；播客音频的 Range 请求原样转发
+	reverse_proxy 127.0.0.1:3000 {
+		flush_interval -1
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+
+	log {
+		output file /var/log/caddy/readwise.log {
+			roll_size 20MiB
+			roll_keep 5
+		}
+	}
+}

@@ -36,7 +36,21 @@ npm run worker                # 另开一个终端：后台任务进程（生成
 
 本地开发时短信默认是 `SMS_PROVIDER=dev`：验证码打印在 `npm run dev` 的终端里。
 
-生产环境：`npm run build` 后用 pm2 / systemd 常驻 `npm start` 和 `npm run worker` 两个进程，前面套 Nginx + HTTPS。
+## 部署到 readwise.waywise.tech
+
+脚本和配置在 `deploy/`：服务器上用 systemd 常驻网站（`readwise-web`，只监听 127.0.0.1:3000）和后台任务（`readwise-worker`）两个进程，由现有的 Caddy 反向代理并自动签发 HTTPS 证书。代码在 `/srv/readwise/app`，数据在 `/srv/readwise/data`，每天备份数据库到 `/srv/readwise/backup`（保留 14 天）。
+
+1. DNSPod 给 waywise.tech 加一条 A 记录：主机记录 `readwise` → 服务器 IP；云服务器防火墙放行 80、443。
+2. 准备一份生产用的 `.env`（不要提交）：`SESSION_SECRET`（`openssl rand -hex 32`）、`ADMIN_PHONES`、模型和博查的 key、`NEXT_PUBLIC_ICP`；正式开放前打开 `SMS_PROVIDER=tencent` 和 `MODERATION_PROVIDER=tencent`。
+3. 第一次部署（初始化服务器 + 上传 .env + 推送本机样书，可选）：
+
+```bash
+DEPLOY_HOST=ubuntu@111.229.194.119 deploy/deploy.sh --setup --env .env.production --push-data
+```
+
+4. 以后每次更新：`DEPLOY_HOST=ubuntu@111.229.194.119 deploy/deploy.sh`
+
+看日志：`ssh ubuntu@111.229.194.119 sudo journalctl -u readwise-web -u readwise-worker -f`（短信还是 dev 模式时，验证码也打印在这里）。
 
 只想看引擎效果、不起网站时，`npm run preview` 打开旧的本地预览服务（http://localhost:5173）。
 

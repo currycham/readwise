@@ -1,0 +1,9 @@
+#!/bin/sh
+# 每天备份 SQLite（在线热备份，不停服务），保留 14 天。由 setup-server.sh 安装到 /etc/cron.daily/
+set -e
+DIR=/srv/readwise/backup
+mkdir -p "$DIR"
+sqlite3 /srv/readwise/data/readwise.db ".backup '$DIR/readwise-$(date +%F).db'"
+gzip -f "$DIR/readwise-$(date +%F).db"
+find "$DIR" -name 'readwise-*.db.gz' -mtime +14 -delete
+chown -R readwise:readwise "$DIR"
