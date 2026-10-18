@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { CATEGORIES } from '../config/categories.mjs';
-import { categoryCounts, countBooks, listBooks } from '../lib/books.mjs';
+import { categoryCounts, countBooks, getBookBySlug, listBooks } from '../lib/books.mjs';
 import { quotaSummary } from '../lib/credits.mjs';
 import EarnRules from './components/EarnRules';
 import PlanCards from './components/PlanCards';
@@ -10,14 +10,19 @@ import { getUser } from './lib/session';
 
 export const dynamic = 'force-dynamic';
 
+// 一份书籍回顾的全部模块：首页示例卡片和“一份书籍回顾里有什么”共用
 const FLOW = [
   ['先看', '推荐', '一句话说清这本书解决什么问题、值不值得读。'],
-  ['15′', '双人播客', '两位主持人对谈，先建立整体印象。'],
+  ['15–20′', '双人播客', '两位主持人对谈，先建立整体印象。'],
   ['5′', '检视', '书的类型、要解决的问题、全书结构图。'],
   ['40′', '分析', '8–10 个知识块，论述、术语、例子、误解、回忆题。'],
-  ['5′', '检测', '12 道快问快答，概念题和情境题混合。'],
+  ['5′', '检测', '12 道闯关题，概念题和情境题混合，答对 8 道过关。'],
   ['10′', '内化', '表态、讲给朋友听、用到自己的一件事上。'],
+  ['读后', '向作者提问', '由 AI 模拟作者，基于书的内容回答你的具体问题。'],
 ];
+
+// 首页右侧的示例书，可用 SAMPLE_BOOK 换成书库里的其他书
+const SAMPLE_SLUG = process.env.SAMPLE_BOOK || '最小阻力之路';
 
 export default async function Home() {
   const user = await getUser();
@@ -26,6 +31,7 @@ export default async function Home() {
   const popular = listBooks({ sort: 'popular', limit: 8 });
   const counts = categoryCounts();
   const quota = user ? quotaSummary(user) : null;
+  const sample = getBookBySlug(SAMPLE_SLUG) || popular[0] || null;
 
   return (
     <>
@@ -35,7 +41,7 @@ export default async function Home() {
             <div className="label">Readwise · 书籍精读回顾</div>
             <h1>60 分钟，<em>吃透</em>一本书</h1>
             <p className="lead">
-              输入书名，生成一份按<b>《如何阅读一本书》</b>和<b>《学习之道》</b>设计的精读手册：先听 15 分钟播客，再限时精读、检测、内化，读完还能<b>向作者提问</b>。
+              输入书名，AI 按<b>《如何阅读一本书》</b>和<b>《学习之道》</b>为你生成一份书籍回顾：一句话推荐、15–20 分钟双人播客、知识块精读、闯关检测和内化练习。读完还能<b>向“作者”提问</b>，由 AI 模拟作者，基于书的内容回答你。
             </p>
             <SearchBox loggedIn={!!user} />
             <div className="meta">
@@ -44,23 +50,24 @@ export default async function Home() {
             </div>
           </div>
 
-          <div className="preview" aria-label="书籍回顾页面示意">
-            <div className="pv-bar"><i className="d" /><i className="c" /><i /><i /></div>
-            <div className="pv-steps"><span>检视 5′</span><span>分析 40′</span><span>检测 5′</span><span>内化 10′</span></div>
-            <div className="pv-title">被讨厌的勇气</div>
-            <div className="muted small">岸见一郎　古贺史健 · <span className="db">豆瓣 8.6</span></div>
-            <div className="pv-rec"><b>没读过？先看这里</b>帮你摆脱对认可的执念，在人际关系里获得自由。</div>
-            <div className="pv-pod"><span className="play" /><span>双人播客 · 18 分钟</span><span className="wave" /></div>
-            <div className="pv-chunk"><b>块 4　课题分离</b><br />分清哪些是自己的课题、哪些是别人的课题，不干涉，也不被干涉。</div>
-            <div className="pv-q"><span>A. 讨好上司</span><span className="r">B. 分清课题</span><span>C. 回避冲突</span><span>D. 压抑情绪</span></div>
-            <div className="pv-ask"><p className="u">我总担心领导怎么看我，怎么办？</p><p className="a">领导怎么评价你，是他的课题。你的课题是……</p></div>
-          </div>
+          {sample && (
+            <Link href={`/b/${encodeURIComponent(sample.slug)}`} className="preview sample" aria-label={`打开示例书籍回顾：${sample.title}`}>
+              <div className="pv-label">示例 · 点开看完整的书籍回顾</div>
+              <div className="pv-title">{sample.title}</div>
+              <div className="muted small">{sample.author}{sample.douban_rating ? <> · <span className="db">豆瓣 {sample.douban_rating}</span></> : null}</div>
+              {sample.one_line && <div className="pv-rec"><b>没读过？先看这里</b>{sample.one_line}</div>}
+              <ol className="pv-mods">
+                {FLOW.map(([t, b]) => <li key={b}><span>{b}</span><span className="t">{t}</span></li>)}
+              </ol>
+              <span className="btn primary pv-go">打开《{sample.title}》示例 →</span>
+            </Link>
+          )}
         </section>
       </div>
 
       <section className="sec">
         <div className="wrap">
-          <div className="sec-head"><h2>一份书籍回顾里有什么</h2><span className="muted small">总共约 60 分钟，每一步都限时</span></div>
+          <div className="sec-head"><h2>一份书籍回顾里有什么</h2><span className="muted small">精读部分约 60 分钟，读完随时可以向“作者”提问</span></div>
           <div className="flow">
             {FLOW.map(([t, b, p]) => <div key={b}><span className="t">{t}</span><b>{b}</b><p>{p}</p></div>)}
           </div>

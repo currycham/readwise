@@ -20,7 +20,8 @@
     "build": "next build",
     "start": "node --env-file-if-exists=.env node_modules/next/dist/bin/next start",
     "worker": "node --env-file-if-exists=.env worker/worker.mjs",
-    "preview": "node --env-file-if-exists=.env server/dev-server.mjs"
+    "preview": "node --env-file-if-exists=.env server/dev-server.mjs",
+    "import-book": "node --env-file-if-exists=.env scripts/import-book.mjs"
   },
   "dependencies": {
     "better-sqlite3": "12.4.1",
