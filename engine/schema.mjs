@@ -1,5 +1,5 @@
 // 书页 JSON 的结构说明（写进提示词）和本地校验。前端模板只认这个结构。
-import { isValidCategory } from '../config/categories.mjs';
+import { isValidCategory, normalizeCategory } from '../config/categories.mjs';
 
 export const SCHEMA_VERSION = 1;
 
@@ -69,6 +69,8 @@ export function validatePage(p) {
   if (!p || typeof p !== 'object') return ['不是对象'];
 
   need(p.book && isStr(p.book.title) && isStr(p.book.author), 'book.title / book.author 缺失');
+  // 先就地规整分类：去掉附带的说明、旧分类名换成新的，能修好就不必让模型重写
+  if (Array.isArray(p.book?.categories)) p.book.categories = p.book.categories.map(c => normalizeCategory(c) || c);
   const cats = p.book?.categories;
   need(Array.isArray(cats) && cats.length >= 1 && cats.length <= 3, 'book.categories 需要 1–3 个');
   (cats || []).forEach((c, i) => need(isValidCategory(c.top, c.sub), `book.categories[${i}] 不在分类表中：${c.top}/${c.sub}`));

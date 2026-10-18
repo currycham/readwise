@@ -20,7 +20,7 @@ export default async function AdminBooks({ searchParams }) {
               <form method="post" action="/api/admin" className="inline-form">
                 <input type="hidden" name="action" value="book_category" /><input type="hidden" name="id" value={b.id} />
                 <select className="input" name="category" aria-label="分类" defaultValue={(c => c ? `${c.top}/${c.sub}` : '')(JSON.parse(b.categories || '[]')[0])} style={{ maxWidth: 220 }}>
-                  {CATEGORIES.map(c => <optgroup key={c.id} label={c.name}>{c.subs.map(s => <option key={s} value={`${c.name}/${s}`}>{s}</option>)}</optgroup>)}
+                  {CATEGORIES.map(c => <optgroup key={c.id} label={c.name}>{c.subs.map(s => <option key={s} value={`${c.name}/${s}`} title={c.desc[s]}>{s}</option>)}</optgroup>)}
                 </select>
                 <button className="btn sm">存</button>
               </form>
@@ -41,7 +41,13 @@ export default async function AdminBooks({ searchParams }) {
             <td>{b.podcast_status}{b.podcast_status !== 'none' && (
               <form method="post" action="/api/admin" className="inline-form"><input type="hidden" name="action" value="book_podcast_reset" /><input type="hidden" name="id" value={b.id} /><button className="btn sm">重置</button></form>)}</td>
             <td className="num">{b.reports || ''}</td>
-            <td>{b.nickname || ''}</td>
+            <td>
+              <form method="post" action="/api/admin" className="inline-form">
+                <input type="hidden" name="action" value="book_first_user" /><input type="hidden" name="id" value={b.id} />
+                <input className="input" name="who" defaultValue={b.nickname || ''} size={8} placeholder="昵称/邮箱" aria-label="首位生成者" />
+                <button className="btn sm">存</button>
+              </form>
+            </td>
             <td className="num">{fmtBJ(b.created_at)}</td>
             <td>
               <form method="post" action="/api/admin" className="inline-form">

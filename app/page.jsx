@@ -94,7 +94,7 @@ export default async function Home() {
                 <div className="cat" key={c.id} tabIndex={0}>
                   <h3><Link href={`/library?top=${encodeURIComponent(c.name)}`}>{c.name}</Link><small>{n} 本</small></h3>
                   <div className="subs">
-                    {c.subs.map(s => <Link key={s} href={`/library?top=${encodeURIComponent(c.name)}&sub=${encodeURIComponent(s)}`}>{s}{counts[`${c.name}/${s}`] ? ` ${counts[`${c.name}/${s}`]}` : ''}</Link>)}
+                    {c.subs.map(s => <Link key={s} title={c.desc[s]} href={`/library?top=${encodeURIComponent(c.name)}&sub=${encodeURIComponent(s)}`}>{s}{counts[`${c.name}/${s}`] ? ` ${counts[`${c.name}/${s}`]}` : ''}</Link>)}
                   </div>
                   <div className="cat-books">
                     {groups.length ? (

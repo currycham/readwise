@@ -35,6 +35,14 @@ export async function POST(req) {
         updateBook(id, { categories: JSON.stringify(page.book.categories), page_json: JSON.stringify(page) });
         break;
       }
+      case 'book_first_user': {
+        const key = String(f.who || '').trim();
+        if (!key) { db.prepare('UPDATE books SET first_user_id = NULL WHERE id = ?').run(id); break; }
+        const us = db.prepare('SELECT id FROM users WHERE nickname = ? OR email = ? OR CAST(id AS TEXT) = ?').all(key, key.toLowerCase(), key);
+        if (us.length !== 1) throw new Error(us.length ? `有 ${us.length} 个账号叫「${key}」，请填邮箱或用户 ID` : `没有找到账号「${key}」`);
+        db.prepare('UPDATE books SET first_user_id = ? WHERE id = ?').run(us[0].id, id);
+        break;
+      }
       case 'book_podcast_reset':
         updateBook(id, { podcast_status: 'none', podcast_file: null, podcast_ms: null, podcast_script: null }); break;
       case 'book_regenerate': {

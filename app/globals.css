@@ -136,7 +136,7 @@ button,input,textarea,select{font:inherit;color:inherit}
 .cat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:flex;flex-direction:column;gap:8px}
 .cat h3{font-size:17px;display:flex;justify-content:space-between;gap:8px}
 .cat h3 a{color:var(--ink);text-decoration:none}
-.cat h3 small{font-family:var(--f-mono);font-size:12px;color:var(--muted);font-weight:400}
+.cat h3 small{font-family:var(--f-mono);font-size:12px;color:var(--muted);font-weight:400;white-space:nowrap;padding-top:4px}
 .cat .subs{display:flex;flex-wrap:wrap;gap:6px}
 .cat .subs a{font-size:13px;color:var(--muted);text-decoration:none;border:1px solid var(--line);border-radius:99px;padding:1px 9px}
 .cat .subs a:hover{color:var(--accent);border-color:var(--accent)}
