@@ -20,7 +20,7 @@ export default async function Header() {
               <UserPill user={user} />
             </>
           ) : (
-            <Link href="/login" className="btn sm primary">登录 / 注册</Link>
+            <Link href="/login" className="btn sm primary nw">登录 / 注册</Link>
           )}
         </div>
       </div>

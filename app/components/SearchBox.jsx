@@ -46,7 +46,7 @@ export default function SearchBox({ loggedIn, autoFocus = false }) {
     <div className="search">
       <form onSubmit={submit} role="search">
         <input id="book-search" className="input" value={q} onChange={e => setQ(e.target.value)} onFocus={() => setOpen(true)}
-          onBlur={() => setTimeout(() => setOpen(false), 150)} placeholder="输入书名，例如：原子习惯" aria-label="书名" autoComplete="off" autoFocus={autoFocus} />
+          onBlur={() => setTimeout(() => setOpen(false), 150)} placeholder="输入一本你读过、想再回顾的书" aria-label="书名" autoComplete="off" autoFocus={autoFocus} />
         <button className="btn primary" type="submit">开始</button>
       </form>
       {open && v && (

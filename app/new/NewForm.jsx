@@ -31,7 +31,7 @@ export default function NewForm({ initialTitle, quota }) {
     <form className="card stack" onSubmit={submit}>
       <div className="field">
         <label htmlFor="title">书名</label>
-        <input id="title" className="input" value={title} onChange={e => setTitle(e.target.value)} placeholder="例如：原子习惯" required maxLength={60} />
+        <input id="title" className="input" value={title} onChange={e => setTitle(e.target.value)} placeholder="一本你读过、想再回顾的书，例如：原子习惯" required maxLength={60} />
       </div>
       <div className="field">
         <label htmlFor="author">作者（可选）</label>

@@ -43,7 +43,7 @@ export default async function Home() {
             <div className="label">Readwise · 书籍精读回顾</div>
             <h1><span className="nw">让读过的书，</span><span className="nw"><em>成为</em>你的一部分</span></h1>
             <p className="lead">
-              AI 参考<b>《如何阅读一本书》</b>的阅读方法和<b>《学习之道》</b>的学习思想，把一本书梳理成一份书籍回顾：先听一段双人播客，再逐块精读、闯关检测、联系自己。读完还能<b>向“作者”提问</b>，由 AI 模拟作者作答。
+              AI 参考<b>《如何阅读一本书》</b>的阅读方法和<b>《学习之道》</b>的学习思想，把一本书梳理成一份书籍回顾：先听一段双人播客，再逐块精读、闯关检测，最后把书里的道理用到自己身上。读完还能<b>向“作者”提问</b>，由 AI 模拟作者作答。
             </p>
             <SearchBox loggedIn={!!user} />
             <div className="meta">
