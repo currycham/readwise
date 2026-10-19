@@ -43,6 +43,8 @@ DEPLOY_HOST=ubuntu@<服务器IP> DEPLOY_KEY=~/.ssh/<你的密钥> deploy/deploy.
 - `npm run revoice -- [书名 ...]`：换了音色（`TTS_VOICE_A` / `TTS_VOICE_B`）后，沿用对谈稿给已有播客重新配音
 - `npm run set-first-user -- 昵称或邮箱 [--only 书名]`：修改首位生成者（后台书籍页也能逐本改）
 - `npm run mail-test -- 邮箱`：测试邮件配置
+- `npm run podcast-compress`：把已有播客转成 64kbps 单声道（新播客合成后自动转码，需要服务器装有 ffmpeg，`PODCAST_BITRATE` 可调）
+- `npm run douban-refresh -- [--all] [--dry]`：从豆瓣刷新评分
 
 看日志：`ssh ubuntu@<服务器IP> sudo journalctl -u readwise-web -u readwise-worker -f`（邮件还是 dev 模式时，验证码也打印在这里）。
 
