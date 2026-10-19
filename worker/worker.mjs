@@ -82,7 +82,7 @@ async function runPodcast(job) {
     if (!mod.ok) throw new Error(`播客稿未通过内容安全审核（${mod.label || '违规'}）`);
     if (mod.flag) console.warn(`任务 ${job.id} 播客稿审核提示（照常配音）：${JSON.stringify(mod.flag)}`);
     const file = dataPath('media', 'podcast', `${book.id}.mp3`);
-    const a = await synthesizePodcast(s.script, file, { book: book.title, onProgress: (d, n) => setProgress(job.id, `配音 ${d}/${n}`) });
+    const a = await synthesizePodcast(s.script, file, { book: book.title, author: book.author, id: `podcast-${book.id}`, onProgress: (d, n) => setProgress(job.id, `配音 ${d}/${n}`) });
     updateBook(book.id, { podcast_status: 'ready', podcast_file: file, podcast_ms: a.durationMs });
     finishJob(job.id, { status: 'done', bookId: book.id, result: { ms: a.durationMs, ...(mod.flag ? { moderation: mod.flag } : {}) } });
   } catch (e) {

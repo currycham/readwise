@@ -91,7 +91,7 @@ async function speak(text, voice, book) {
 /**
  * @returns {Promise<{file:string, durationMs:number, chars:number, cost:number, turns:number}>}
  */
-export async function synthesizePodcast(script, outFile, { book = '', onProgress } = {}) {
+export async function synthesizePodcast(script, outFile, { book = '', author = '', id = '', onProgress } = {}) {
   const turns = toTurns(script);
   if (!turns.length) throw new Error('播客稿为空');
   const parts = new Array(turns.length);
@@ -107,7 +107,7 @@ export async function synthesizePodcast(script, outFile, { book = '', onProgress
   // 先写临时文件再转码替换，重新配音时旧音频在成功前一直可听
   const raw = `${outFile}.raw.mp3`;
   await writeFile(raw, Buffer.concat(parts.map(p => stripMp3(p.audio))));
-  await compressMp3(raw, outFile);
+  await compressMp3(raw, outFile, { title: book, author, id });
   const chars = parts.reduce((n, p) => n + p.chars, 0);
   return { file: outFile, durationMs: parts.reduce((n, p) => n + p.ms, 0), chars, cost: chars / 10000 * TTS.pricePer10k, turns: turns.length };
 }
@@ -116,12 +116,12 @@ export async function synthesizePodcast(script, outFile, { book = '', onProgress
  * 用 ffmpeg 转成单声道 CBR（默认 64kbps，语音足够清晰，文件约为 128kbps 的一半），并写入准确的时长信息。
  * 没有 ffmpeg 或转码失败时直接用原文件。PODCAST_BITRATE=0 关闭转码。
  */
-export async function compressMp3(src, dst) {
+export async function compressMp3(src, dst, tags = {}) {
   const kbps = process.env.PODCAST_BITRATE ?? '64';
   const tmp = `${dst}.tmp.mp3`;
   if (kbps !== '0') {
     try {
-      await promisify(execFile)('ffmpeg', ['-y', '-v', 'error', '-i', src, '-ac', '1', '-ar', '32000', '-b:a', `${kbps}k`, '-map_metadata', '-1', tmp], { timeout: 300000 });
+      await promisify(execFile)('ffmpeg', ['-y', '-v', 'error', '-i', src, '-ac', '1', '-ar', '32000', '-b:a', `${kbps}k`, '-map_metadata', '-1', ...aigcTags(tags), tmp], { timeout: 300000 });
       await rename(tmp, dst);
       if (src !== dst) await rm(src, { force: true });
       return true;
@@ -132,4 +132,33 @@ export async function compressMp3(src, dst) {
   }
   if (src !== dst) await rename(src, dst);
   return false;
+}
+
+/**
+ * AI 生成内容的隐式标识（《人工智能生成合成内容标识办法》）：写进 MP3 的 ID3 标签。
+ * AIGC 字段参照 GB 45438-2025 的元数据格式；节目开头的口播是显式标识。
+ * @param {{title?:string, author?:string, id?:string}} t
+ */
+export function aigcTags({ title = '', author = '', id = '' } = {}) {
+  const aigc = { Label: '1', ContentProducer: process.env.AIGC_PRODUCER || new URL(process.env.SITE_URL || 'https://readwise.waywise.tech').host, ProduceID: id || title };
+  return ['-id3v2_version', '3',
+    '-metadata', `title=${title ? `《${title}》双人播客` : '双人播客'}`,
+    '-metadata', `artist=${author ? `Readwise · ${author}` : 'Readwise'}`,
+    '-metadata', 'album=Readwise',
+    '-metadata', 'comment=本节目由 AI 生成，内容可能有误，不能替代阅读原书',
+    '-metadata', `AIGC=${JSON.stringify(aigc)}`];
+}
+
+/** 给已有的播客文件补写标识，不重新编码 */
+export async function tagMp3(file, tags) {
+  const tmp = `${file}.tag.mp3`;
+  try {
+    await promisify(execFile)('ffmpeg', ['-y', '-v', 'error', '-i', file, '-map', '0:a', '-c', 'copy', '-map_metadata', '-1', ...aigcTags(tags), tmp], { timeout: 120000 });
+    await rename(tmp, file);
+    return true;
+  } catch (e) {
+    await rm(tmp, { force: true });
+    console.warn(`写入播客标识失败：${e.message.slice(0, 120)}`);
+    return false;
+  }
 }

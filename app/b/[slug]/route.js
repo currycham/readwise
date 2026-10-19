@@ -3,6 +3,7 @@ import { addView, getBookBySlug, pageForRender } from '../../../lib/books.mjs';
 import { recordOpen } from '../../../lib/rewards.mjs';
 import { renderPage } from '../../../renderer/render.mjs';
 import { getUser } from '../../lib/session';
+import { SITE_URL } from '../../lib/site';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,6 +16,6 @@ export async function GET(_req, { params }) {
   }
   addView(book.id);
   if (user) recordOpen(user.id, book.id);
-  const html = await renderPage(pageForRender(book, user), { slug: book.slug });
+  const html = await renderPage(pageForRender(book, user), { slug: book.slug, siteUrl: SITE_URL, aigcId: `book-${book.id}` });
   return new Response(html, { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' } });
 }

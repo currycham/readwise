@@ -29,7 +29,8 @@
     "revoice": "node --env-file-if-exists=.env scripts/revoice.mjs",
     "balance-check": "node --env-file-if-exists=.env scripts/balance-check.mjs",
     "douban-refresh": "node --env-file-if-exists=.env scripts/douban-refresh.mjs",
-    "podcast-compress": "node --env-file-if-exists=.env scripts/podcast-compress.mjs"
+    "podcast-compress": "node --env-file-if-exists=.env scripts/podcast-compress.mjs",
+    "podcast-tag": "node --env-file-if-exists=.env scripts/podcast-tag.mjs"
   },
   "dependencies": {
     "better-sqlite3": "12.4.1",
