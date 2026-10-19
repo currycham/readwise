@@ -83,6 +83,7 @@ export const ROLES = {
   repair: env.ROLE_REPAIR || 'hy4',              // 按质检意见修正（流水线实际使用生成模型）
   ask: env.ROLE_ASK || 'hy3',                    // 问作者
   podcast: env.ROLE_PODCAST || 'hy4',            // 播客稿
+  link: env.ROLE_LINK || 'deepseek-pro',         // 书籍网络：找书与书之间的联系
 };
 
 // 联网搜索：博查 Web Search API（或设 SEARCH_PROVIDER=none 只用模型知识，仅供测试）

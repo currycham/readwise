@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { CATEGORIES } from '../config/categories.mjs';
 import { booksByTop, categoryCounts, countBooks, getBookBySlug, listBooks } from '../lib/books.mjs';
 import { quotaSummary } from '../lib/credits.mjs';
+import { countLinks } from '../lib/links.mjs';
 import EarnRules from './components/EarnRules';
 import PlanCards from './components/PlanCards';
 import BookCard from './components/BookCard';
@@ -33,6 +34,7 @@ export default async function Home() {
   const counts = categoryCounts();
   const byTop = booksByTop();
   const quota = user ? quotaSummary(user) : null;
+  const nLinks = countLinks();
   const sample = getBookBySlug(SAMPLE_SLUG) || popular[0] || null;
 
   return (
@@ -118,6 +120,30 @@ export default async function Home() {
           </div>
         </div>
       </section>
+
+      {nLinks > 0 && (
+        <section className="sec">
+          <div className="wrap">
+            <Link href="/graph" className="graph-teaser">
+              <svg viewBox="0 0 200 120" aria-hidden="true">
+                <g stroke="#7AA2F7" strokeOpacity=".55" strokeWidth="1.2" fill="none">
+                  <path d="M30 80Q60 40 95 52" /><path d="M95 52Q130 30 168 44" stroke="#F6C453" /><path d="M95 52Q110 85 140 92" stroke="#4FD1C5" />
+                  <path d="M30 80Q80 100 140 92" stroke="#FF7A6B" /><path d="M168 44Q160 75 140 92" stroke="#C792EA" /><path d="M60 22Q70 40 95 52" />
+                </g>
+                {[[30, 80, '#F78FB3', 6], [95, 52, '#F6C453', 9], [168, 44, '#7AA2F7', 7], [140, 92, '#4FD1C5', 7], [60, 22, '#C792EA', 5]].map(([x, y, c, r]) => (
+                  <circle key={x} cx={x} cy={y} r={r} fill={c} style={{ filter: `drop-shadow(0 0 6px ${c})` }} />
+                ))}
+              </svg>
+              <div>
+                <div className="label">书籍网络</div>
+                <b>书与书之间，是连在一起的</b>
+                <p>{total} 本书、{nLinks} 条联系：哪些书互相呼应、彼此争论、互为补充，读完一本，下一本读什么。</p>
+                <span>打开书籍网络 →</span>
+              </div>
+            </Link>
+          </div>
+        </section>
+      )}
 
       <section className="sec">
         <div className="wrap">

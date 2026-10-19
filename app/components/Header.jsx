@@ -10,8 +10,9 @@ export default async function Header() {
         <Link href="/" className="brand"><b>Readwise</b><span>让读过的书成为你的一部分</span></Link>
         <nav aria-label="主导航">
           <Link href="/library">书库</Link>
+          <Link href="/graph"><span className="hide-sm">书籍</span>网络</Link>
           <Link href="/rank">排行榜</Link>
-          <Link href="/pricing">价格</Link>
+          <Link href="/pricing" className="hide-sm">价格</Link>
         </nav>
         <div className="who">
           {user ? (

@@ -1,6 +1,8 @@
 # Readwise 定时任务：由 setup-server.sh 安装到 /etc/cron.d/readwise
-# 每 3 小时检查一次各家 API 余额，低于阈值发邮件；每天凌晨刷新超过 30 天的豆瓣评分
+# 每 3 小时检查一次各家 API 余额，低于阈值发邮件；每天凌晨刷新超过 30 天的豆瓣评分、补算书籍网络
 SHELL=/bin/sh
 PATH=/usr/local/bin:/usr/bin:/bin
 20 */3 * * * readwise cd /srv/readwise/app && READWISE_DATA_DIR=/srv/readwise/data node --env-file=.env scripts/balance-check.mjs >> /srv/readwise/data/balance.log 2>&1
 40 4 * * * readwise cd /srv/readwise/app && READWISE_DATA_DIR=/srv/readwise/data node --env-file=.env scripts/douban-refresh.mjs >> /srv/readwise/data/douban.log 2>&1
+# 书籍网络：给后台复核通过等还没接入网络的书补算联系
+50 4 * * * readwise cd /srv/readwise/app && READWISE_DATA_DIR=/srv/readwise/data node --env-file=.env scripts/book-links.mjs >> /srv/readwise/data/links.log 2>&1

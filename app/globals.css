@@ -250,3 +250,70 @@ button,input,textarea,select{font:inherit;color:inherit}
 .oss p{margin:4px 0 0}
 @media (max-width:560px){.oss{flex-wrap:wrap}.oss>span{width:100%}}
 .nw{white-space:nowrap}
+
+/* ---------- 书籍网络 ---------- */
+.graph-page{padding:28px 0 48px}
+.graph-page h1{margin:4px 0 6px}
+.graph-page .lead{max-width:720px;margin:0 0 18px}
+.graph{position:relative;height:min(78vh,780px);min-height:460px;overflow:hidden;color:#E6EEF8;
+  background:radial-gradient(ellipse at 30% 20%,#16213A 0%,#0A1020 55%,#05070E 100%);border-block:1px solid #1E2A44}
+/* 星空：两层细小的点 */
+.graph::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.55;
+  background-image:radial-gradient(1px 1px at 12% 18%,#fff8,transparent),radial-gradient(1px 1px at 72% 34%,#fff6,transparent),radial-gradient(1px 1px at 38% 78%,#fff5,transparent),radial-gradient(1.5px 1.5px at 86% 82%,#fff7,transparent),radial-gradient(1px 1px at 55% 12%,#fff5,transparent),radial-gradient(1px 1px at 22% 58%,#fff4,transparent);
+  background-size:420px 420px}
+.graph canvas{display:block;touch-action:none;cursor:grab;position:relative}
+.graph button{font:inherit}
+.g-top{position:absolute;top:12px;left:12px;right:12px;display:flex;gap:10px;justify-content:space-between;align-items:flex-start;pointer-events:none}
+.g-top>*{pointer-events:auto}
+.g-legend{display:flex;flex-wrap:wrap;gap:6px}
+.g-legend button{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:99px;border:1px solid #2A3756;background:#0B1222cc;color:#DCE6F5;font-size:13px;cursor:pointer;backdrop-filter:blur(6px)}
+.g-legend button.off{opacity:.4}
+.g-legend i,.g-cats i,.g-cat i{display:inline-block;width:9px;height:9px;border-radius:50%;box-shadow:0 0 8px currentColor}
+.g-search{position:relative;width:200px;flex:none}
+.g-search .input{background:#0B1222cc;border-color:#2A3756;color:#E6EEF8;padding:6px 10px;font-size:14px;backdrop-filter:blur(6px)}
+.g-sug{position:absolute;top:100%;left:0;right:0;margin-top:4px;background:#0E1730;border:1px solid #2A3756;border-radius:8px;overflow:hidden;z-index:2}
+.g-sug button{display:block;width:100%;text-align:left;background:none;border:0;color:#E6EEF8;padding:7px 10px;cursor:pointer;font-size:14px}
+.g-sug button:hover{background:#1A2546}
+.g-sug small{color:#8FA0BE;margin-left:6px}
+.g-zoom{position:absolute;left:12px;bottom:12px;display:flex;flex-direction:column;gap:4px}
+.g-zoom button{width:34px;height:34px;border-radius:8px;border:1px solid #2A3756;background:#0B1222cc;color:#E6EEF8;cursor:pointer;font-size:16px}
+.g-hint,.g-tip{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);font-size:13px;color:#9FB0CC;background:#0B1222b3;padding:4px 12px;border-radius:99px;white-space:nowrap;pointer-events:none}
+.g-tip{color:#fff}.g-tip span{color:#9FB0CC;margin-left:8px}
+.g-card{position:absolute;top:56px;right:12px;bottom:12px;width:min(360px,calc(100% - 24px));overflow:auto;background:#0B1222e6;border:1px solid #2A3756;border-radius:14px;padding:16px 18px;backdrop-filter:blur(10px);box-shadow:0 10px 40px #0008}
+.g-card h2{margin:6px 0 2px;font-size:20px;line-height:1.35;color:#fff}
+.g-card h3{margin:16px 0 6px;font-size:13px;font-weight:500;color:#9FB0CC}
+.g-x{position:absolute;top:8px;right:10px;background:none;border:0;color:#9FB0CC;font-size:22px;cursor:pointer;line-height:1}
+.g-cat{font-size:12px;color:#9FB0CC;display:flex;align-items:center;gap:6px}
+.g-by{margin:0;color:#9FB0CC;font-size:14px}
+.g-one{margin:8px 0 12px;font-size:14px;line-height:1.6;color:#DCE6F5}
+.g-card ul{list-style:none;margin:0;padding:0}
+.g-card li{padding:9px 0;border-top:1px solid #1E2A44}
+.g-card li button{background:none;border:0;color:#fff;padding:0;cursor:pointer;text-align:left;display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:14px}
+.g-card li button:hover b{text-decoration:underline}
+.g-card li p{margin:4px 0 0;font-size:13px;line-height:1.55;color:#B4C2D8}
+.g-type{display:inline-block;font-size:11px;padding:0 6px;border:1px solid;border-radius:99px;line-height:1.6}
+.g-concept{font-size:12px;color:#9FB0CC}
+.g-cats{display:flex;flex-wrap:wrap;gap:6px 14px;margin:14px 0 4px;font-size:13px;color:var(--muted)}
+.g-cats span{display:inline-flex;align-items:center;gap:6px}
+.g-list{margin-top:10px;font-size:14px}
+.g-list summary{cursor:pointer;color:var(--muted)}
+.g-list li{margin:6px 0}
+.g-list .g-type{margin:0 6px}
+@media (max-width:640px){
+  .graph{height:72vh;min-height:420px}
+  .g-top{flex-direction:column-reverse}
+  .g-search{width:100%}
+  .g-card{top:auto;left:8px;right:8px;width:auto;bottom:8px;max-height:58%;border-radius:14px}
+  .g-hint{white-space:normal;text-align:center;width:max-content;max-width:90%}
+  .g-zoom{bottom:auto;top:auto;left:auto;right:12px;bottom:12px}
+}
+/* 首页的书籍网络入口：深色星空卡片 */
+.graph-teaser{display:flex;align-items:center;gap:24px;padding:22px 26px;border-radius:16px;text-decoration:none;color:#E6EEF8;
+  background:radial-gradient(ellipse at 20% 30%,#1A2748 0%,#0A1020 60%,#05070E 100%);border:1px solid #1E2A44;transition:border-color .2s}
+.graph-teaser:hover{border-color:#4A5D8A}
+.graph-teaser svg{width:220px;flex:none}
+.graph-teaser .label{color:#8FA0BE}
+.graph-teaser b{display:block;font-size:20px;margin:4px 0 6px;color:#fff}
+.graph-teaser p{margin:0 0 10px;color:#B4C2D8;font-size:15px}
+.graph-teaser span{color:#7AA2F7;font-size:14px}
+@media (max-width:560px){.graph-teaser{flex-direction:column;align-items:flex-start;gap:8px;padding:18px}.graph-teaser svg{width:100%;max-width:260px}}

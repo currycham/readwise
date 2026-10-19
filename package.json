@@ -32,7 +32,8 @@
     "podcast-compress": "node --env-file-if-exists=.env scripts/podcast-compress.mjs",
     "podcast-tag": "node --env-file-if-exists=.env scripts/podcast-tag.mjs",
     "podcast-loudnorm": "node --env-file-if-exists=.env scripts/podcast-loudnorm.mjs",
-    "rekey-books": "node --env-file-if-exists=.env scripts/rekey-books.mjs"
+    "rekey-books": "node --env-file-if-exists=.env scripts/rekey-books.mjs",
+    "book-links": "node --env-file-if-exists=.env scripts/book-links.mjs"
   },
   "dependencies": {
     "better-sqlite3": "12.4.1",

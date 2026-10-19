@@ -206,6 +206,17 @@ textarea{width:100%;min-height:76px;border:1px solid var(--line);border-radius:8
 
 /* ask */
 .ask{display:flex;flex-direction:column;gap:12px}
+#relGraph{color:var(--accent)}
+.rel{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
+.rel a{display:flex;flex-direction:column;gap:4px;height:100%;box-sizing:border-box;padding:12px 14px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);color:var(--ink);text-decoration:none}
+.rel a:hover{border-color:var(--accent)}
+.rel .t{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.rel .t b{font-size:16px}
+.rel .ty{font-size:11px;padding:0 7px;border-radius:99px;border:1px solid currentColor;line-height:1.7}
+.rel .c{font-size:12px;color:var(--muted)}
+.rel p{margin:0;font-size:14px;color:var(--muted);line-height:1.6}
+.rel [data-t="呼应"]{color:#0F8B80} .rel [data-t="对话"]{color:#C2493B} .rel [data-t="互补"]{color:#9A6B00} .rel [data-t="延伸"]{color:#3D63C9} .rel [data-t="同源"]{color:#8A4FB5}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .rel [data-t="呼应"]{color:#4FD1C5} :root:not([data-theme="light"]) .rel [data-t="对话"]{color:#FF7A6B} :root:not([data-theme="light"]) .rel [data-t="互补"]{color:#F6C453} :root:not([data-theme="light"]) .rel [data-t="延伸"]{color:#7AA2F7} :root:not([data-theme="light"]) .rel [data-t="同源"]{color:#C792EA}}
 .ai-tag{display:inline-block;font-size:12px;padding:1px 8px;border-radius:99px;border:1px solid var(--tension);color:var(--tension)}
 .msgs{display:flex;flex-direction:column;gap:10px}
 .msg{max-width:88%;padding:10px 14px;border-radius:12px;font-size:15px;white-space:pre-wrap}
@@ -392,6 +403,15 @@ footer a{color:var(--muted)}
       <div class="askrow"><textarea id="askInput" aria-label="你的问题" placeholder="写下你的问题……"></textarea><button class="btn primary" id="askSend">发送</button></div>
       <p class="readout" id="askState"></p>
     </div>
+  </section>
+
+  <section id="related" hidden>
+    <header>
+      <div class="label">读完之后</div>
+      <div class="shead"><h2>接着读哪一本</h2><a class="small" id="relGraph" href="/graph">在书籍网络里看 →</a></div>
+      <p class="how">书库里和这本书思想上相连的书：有的互相印证，有的观点相左，有的把问题推得更远。</p>
+    </header>
+    <ul class="rel" id="relList"></ul>
   </section>
 
   <section id="s5">
@@ -597,6 +617,13 @@ function sheet(){
   $('#sheet').textContent=txt;return txt}
 ['w1','w2','w3'].forEach(id=>{const el=$('#'+id);el.value=S.w[id]||'';el.addEventListener('input',()=>{S.w[id]=el.value;save();sheet()})});
 $('#copy').onclick=async()=>{const t=sheet();try{await navigator.clipboard.writeText(t);$('#copied').textContent='已复制'}catch(e){const r=document.createRange();r.selectNodeContents($('#sheet'));const s=getSelection();s.removeAllRanges();s.addRange(r);$('#copied').textContent='已选中，请按 ⌘C / Ctrl+C 复制'}};
+
+/* ---------- 接着读哪一本（书籍网络） ---------- */
+if(SITE&&SITE.related&&SITE.related.length){
+  $('#related').hidden=false;
+  $('#relGraph').href='/graph?b='+encodeURIComponent(SLUG);
+  $('#relList').innerHTML=SITE.related.map(r=>`<li><a href="/b/${encodeURIComponent(r.slug)}"><span class="t"><span class="ty" data-t="${esc(r.type)}">${esc(r.type)}</span><b>《${esc(r.title.split(/[:：]/)[0])}》</b>${r.concept?`<span class="c">${esc(r.concept)}</span>`:''}</span><p>${esc(r.why)}</p></a></li>`).join('');
+}
 
 /* ---------- podcast ---------- */
 function showScript(p){

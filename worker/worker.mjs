@@ -8,6 +8,7 @@ import { buildBookPage } from '../engine/pipeline.mjs';
 import { podcastScript, synthesizePodcast } from '../engine/podcast.mjs';
 import { validatePage } from '../engine/schema.mjs';
 import { insertBook, updateBook } from '../lib/books.mjs';
+import { linkBook } from '../lib/links.mjs';
 import { getDb } from '../lib/db.mjs';
 import { checkLongText, collectText } from '../lib/moderation.mjs';
 import { rewardGenerate } from '../lib/rewards.mjs';
@@ -55,6 +56,8 @@ async function runGenerate(job) {
     const reward = existed ? 0 : rewardGenerate(job, book.id);
     if (mod.flag) console.warn(`任务 ${job.id} 审核提示（已发布）：${JSON.stringify(mod.flag)}`);
     finishJob(job.id, { status: 'done', bookId: book.id, result: { slug: book.slug, existed, reward, ...(mod.flag ? { moderation: mod.flag } : {}) } });
+    // 书页已发布后再接入书籍网络；失败不影响书页，每天的定时任务会补上
+    if (!existed) await linkBook(book.id, { log: m => console.log(`任务 ${job.id} ${m}`) }).catch(e => console.warn(`任务 ${job.id} 书籍网络失败：${e.message.slice(0, 100)}`));
   } finally {
     if (file) await rm(file, { force: true }); // 上传的原文处理完即删除
   }
