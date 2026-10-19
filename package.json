@@ -36,11 +36,14 @@
     "book-links": "node --env-file-if-exists=.env scripts/book-links.mjs"
   },
   "dependencies": {
+    "3d-force-graph": "1.80.1",
     "better-sqlite3": "12.4.1",
     "next": "15.5.27",
     "nodemailer": "10.0.14",
     "react": "19.1.1",
-    "react-dom": "19.1.1"
+    "react-dom": "19.1.1",
+    "three": "0.186.1",
+    "three-spritetext": "1.10.0"
   },
   "overrides": {
     "postcss": "8.5.28"

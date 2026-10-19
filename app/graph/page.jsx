@@ -2,13 +2,11 @@
 import Link from 'next/link';
 import { CATEGORIES } from '../../config/categories.mjs';
 import { graphData } from '../../lib/links.mjs';
-import BookGraph, { TYPE_COLORS } from './BookGraph';
+import BookGraph from './BookGraph';
+import { PALETTE, TYPE_COLORS } from './types';
 
 export const metadata = { title: '书籍网络', description: '书库里的书按思想上的联系连成一张网：哪些书互相呼应、彼此争论、互为补充，读完一本该读哪一本。' };
 export const dynamic = 'force-dynamic';
-
-// 八个问题分类各一种颜色，和深色底的网络图搭配
-const PALETTE = ['#F6C453', '#7AA2F7', '#F78FB3', '#FF9F6B', '#4FD1C5', '#9BD86C', '#C792EA', '#5CC8FF'];
 
 export default async function Graph({ searchParams }) {
   const sp = await searchParams;
