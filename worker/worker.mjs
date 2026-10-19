@@ -82,7 +82,10 @@ async function runPodcast(job) {
     }
     // 播客稿配音前先审核，不通过就不花配音的钱
     const mod = await checkLongText(collectText(s.script).join('\n'));
-    if (!mod.ok) throw new Error(`播客稿未通过内容安全审核（${mod.label || '违规'}）`);
+    // 书页因同一标签被拦、管理员复核后放行的书（多为误判），播客稿再命中同一标签时不再拦，只记一笔
+    const approved = !mod.ok && getDb().prepare("SELECT 1 FROM jobs WHERE type = 'generate' AND book_id = ? AND json_extract(result, '$.approved') = 1 AND json_extract(result, '$.moderation.label') = ?").get(book.id, mod.label);
+    if (!mod.ok && !approved) throw new Error(`播客稿未通过内容安全审核（${mod.label || '违规'}）`);
+    if (approved) console.warn(`任务 ${job.id} 播客稿命中 ${mod.label}，书页已人工复核通过，照常配音：${JSON.stringify(mod.keywords)}`);
     if (mod.flag) console.warn(`任务 ${job.id} 播客稿审核提示（照常配音）：${JSON.stringify(mod.flag)}`);
     const file = dataPath('media', 'podcast', `${book.id}.mp3`);
     const a = await synthesizePodcast(s.script, file, { book: book.title, author: book.author, id: `podcast-${book.id}`, onProgress: (d, n) => setProgress(job.id, `配音 ${d}/${n}`) });
