@@ -183,6 +183,20 @@ textarea{width:100%;min-height:76px;border:1px solid var(--line);border-radius:8
 /* podcast */
 .pod{display:flex;flex-direction:column;gap:10px}
 .pod audio{width:100%}
+.pod-ctl[hidden]{display:none}
+.pod-ctl{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.pod-ctl .rates{display:inline-flex;gap:4px;margin-left:auto}
+.pod-ctl .rates button.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.mini{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surface);border-top:1px solid var(--line);box-shadow:0 -4px 16px rgba(0,0,0,.06);padding:8px 16px calc(8px + env(safe-area-inset-bottom,0px))}
+.mini[hidden]{display:none}
+.mini .in{max-width:1000px;margin:0 auto;display:flex;align-items:center;gap:10px}
+.mini .pp{width:38px;height:38px;border-radius:50%;border:0;background:var(--accent);color:var(--accent-ink);font-size:15px;cursor:pointer;flex:none}
+.mini .t{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.mini .t b{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mini input[type=range]{width:100%;margin:0;accent-color:var(--accent)}
+.mini .tm{font-family:var(--f-mono);font-size:12px;color:var(--muted);white-space:nowrap}
+.mini .sk{border:1px solid var(--line);background:none;color:var(--ink);border-radius:8px;padding:4px 6px;font-size:12px;cursor:pointer;flex:none}
+@media (max-width:480px){.mini .sk.f{display:none}}
 .transcript{max-height:360px;overflow:auto;display:flex;flex-direction:column;gap:6px;font-size:14px;background:var(--bg);border-radius:8px;padding:12px}
 .transcript b{font-family:var(--f-mono);font-size:12px;color:var(--accent);margin-right:6px}
 .transcript h4{font-size:14px;margin-top:8px;color:var(--tension)}
@@ -260,9 +274,25 @@ footer a{color:var(--muted)}
       <div class="label">先听一遍 · 双人播客</div>
       <p class="how" id="podInfo">用 15–20 分钟的对谈建立全书的整体印象，再进入下面的限时精读。</p>
       <audio id="podAudio" controls preload="none" hidden></audio>
+      <div class="pod-ctl" id="podCtl" hidden>
+        <button class="btn sm" data-skip="-15" aria-label="后退 15 秒">−15″</button>
+        <button class="btn sm" data-skip="15" aria-label="前进 15 秒">+15″</button>
+        <span class="rates" role="group" aria-label="播放速度"></span>
+        <span class="readout" id="podResume"></span>
+      </div>
       <div class="ctrl"><button class="btn primary sm" id="podBtn">生成并收听</button><span class="readout" id="podState"></span></div>
       <div class="transcript" id="podScript" hidden></div>
     </div>
+    <div class="mini" id="podMini" hidden>
+  <div class="in">
+    <button class="pp" id="miniPP" aria-label="播放/暂停">▶</button>
+    <button class="sk" data-skip="-15" aria-label="后退 15 秒">−15</button>
+    <div class="t"><b id="miniTitle"></b><input type="range" id="miniSeek" min="0" max="1000" value="0" aria-label="播放进度"></div>
+    <span class="tm" id="miniTime">0:00</span>
+    <button class="sk f" data-skip="15" aria-label="前进 15 秒">+15</button>
+    <button class="sk" id="miniRate" aria-label="播放速度">1×</button>
+  </div>
+</div>
 
     <p class="by">60 分钟精读全书：检视 5′ → 分析 40′ → 检测 5′ → 批判与内化 10′</p>
     <div class="rules">
@@ -571,7 +601,63 @@ function showScript(p){
   box.innerHTML=`<div class="label">节目文稿</div>`+p.segments.map(s=>`<h4>${esc(s.heading||'')}</h4>`+s.lines.map(l=>`<p><b>${l.speaker==='A'?'领读':'提问'}</b>${esc(l.text)}</p>`).join('')).join('');
 }
 function showAudio(url,ms){const a=$('#podAudio');if(a.getAttribute('src')!==url)a.src=url;a.hidden=false;$('#podBtn').hidden=true;
-  $('#podState').textContent=ms?`约 ${Math.round(ms/60000)} 分钟 · 本节目由 AI 生成`:'本节目由 AI 生成'}
+  $('#podState').textContent=ms?`约 ${Math.round(ms/60000)} 分钟 · 本节目由 AI 生成`:'本节目由 AI 生成';podPlayer()}
+
+/* 播放器增强：记住进度、倍速、前进后退、锁屏信息、滚动时的底部迷你播放条（进度和倍速只存在本机浏览器） */
+const RATES=[1,1.25,1.5,2];
+const fmtT=s=>{s=Math.max(0,Math.floor(s||0));const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=String(s%60).padStart(2,'0');return h?`${h}:${String(m).padStart(2,'0')}:${x}`:`${m}:${x}`};
+const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}},lsSet=(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}};
+let podReady=false;
+function podPlayer(){
+  if(podReady)return;podReady=true;
+  const a=$('#podAudio'),posKey='rw-pod-pos:'+SLUG,mini=$('#podMini');
+  $('#podCtl').hidden=false;
+  let rate=+lsGet('rw-pod-rate')||1;if(!RATES.includes(rate))rate=1;
+  const rates=$('#podCtl .rates');
+  rates.innerHTML=RATES.map(r=>`<button class="btn sm" data-rate="${r}">${r}×</button>`).join('');
+  const setRate=r=>{rate=r;a.playbackRate=r;a.defaultPlaybackRate=r;lsSet('rw-pod-rate',String(r));
+    rates.querySelectorAll('button').forEach(b=>b.classList.toggle('on',+b.dataset.rate===r));$('#miniRate').textContent=r+'×'};
+  setRate(rate);
+  rates.onclick=e=>{const b=e.target.closest('[data-rate]');if(b)setRate(+b.dataset.rate)};
+  $('#miniRate').onclick=()=>setRate(RATES[(RATES.indexOf(rate)+1)%RATES.length]);
+  const skip=d=>{if(!a.duration&&a.readyState<1){a.play();return}a.currentTime=Math.max(0,Math.min((a.duration||1e9)-1,a.currentTime+d))};
+  document.addEventListener('click',e=>{const b=e.target.closest('[data-skip]');if(b)skip(+b.dataset.skip)});
+  // 断点续听：上次听到的位置（离开头和结尾都超过 10 秒才记）
+  const saved=+lsGet(posKey)||0;
+  if(saved>10)$('#podResume').textContent=`上次听到 ${fmtT(saved)}，点播放继续`;
+  let restored=false;
+  a.addEventListener('loadedmetadata',()=>{a.playbackRate=rate;if(!restored&&saved>10&&saved<a.duration-10){a.currentTime=saved}restored=true});
+  let lastSave=0;
+  const savePos=()=>{if(!started)return;const t=a.currentTime;lsSet(posKey,t>10&&(!a.duration||t<a.duration-10)?String(Math.floor(t)):null)};
+  a.addEventListener('timeupdate',()=>{if(Date.now()-lastSave>5000){lastSave=Date.now();savePos()}updMini()});
+  a.addEventListener('pause',savePos);
+  a.addEventListener('ended',()=>{lsSet(posKey,null);$('#podResume').textContent='已听完'});
+  addEventListener('pagehide',savePos);
+  a.addEventListener('play',()=>{a.playbackRate=rate;$('#podResume').textContent='';started=true;setMeta();updMini()});
+  a.addEventListener('pause',updMini);
+  // 锁屏/控制中心：书名、作者、封面和前进后退
+  function setMeta(){
+    if(!('mediaSession' in navigator))return;
+    try{navigator.mediaSession.metadata=new MediaMetadata({title:`《${bk.title}》双人播客`,artist:bk.author||'',album:'Readwise',artwork:[{src:'/podcast-art.png',sizes:'512x512',type:'image/png'}]})}catch(e){}
+    const h=(k,f)=>{try{navigator.mediaSession.setActionHandler(k,f)}catch(e){}};
+    h('play',()=>a.play());h('pause',()=>a.pause());
+    h('seekbackward',d=>skip(-((d&&d.seekOffset)||15)));h('seekforward',d=>skip((d&&d.seekOffset)||15));
+    h('seekto',d=>{if(d&&d.seekTime!=null)a.currentTime=d.seekTime});
+  }
+  // 底部迷你播放条：开始播放后，播放器滚出屏幕时出现
+  let started=false,podVisible=true;
+  $('#miniTitle').textContent=`《${bk.title}》双人播客`;
+  $('#miniPP').onclick=()=>a.paused?a.play():a.pause();
+  const seek=$('#miniSeek');let dragging=false;
+  seek.addEventListener('input',()=>{dragging=true;if(a.duration)$('#miniTime').textContent=fmtT(a.duration*seek.value/1000)});
+  seek.addEventListener('change',()=>{if(a.duration)a.currentTime=a.duration*seek.value/1000;dragging=false});
+  function updMini(){
+    mini.hidden=!started||podVisible;document.body.style.paddingBottom=mini.hidden?'':'72px';
+    $('#miniPP').textContent=a.paused?'▶':'❚❚';
+    if(!dragging&&a.duration){seek.value=Math.round(1000*a.currentTime/a.duration);$('#miniTime').textContent=`${fmtT(a.currentTime)} / ${fmtT(a.duration)}`}
+  }
+  if('IntersectionObserver' in window)new IntersectionObserver(es=>{podVisible=es[0].isIntersecting;updMini()}).observe($('#podcast'));
+}
 let podTimer=null;
 function podStatus(j){
   if(j.script&&j.script.segments)showScript(j.script);

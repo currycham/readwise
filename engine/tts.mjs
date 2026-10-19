@@ -1,5 +1,7 @@
 // 双人播客语音合成：按说话人把对谈稿切成若干段，逐段调用 TTS，按顺序拼接成一个 mp3。
-import { mkdir, writeFile } from 'node:fs/promises';
+import { execFile } from 'node:child_process';
+import { mkdir, rename, rm, writeFile } from 'node:fs/promises';
+import { promisify } from 'node:util';
 import { dirname } from 'node:path';
 import { TTS } from '../config/models.mjs';
 import { record } from './llm.mjs';
@@ -102,7 +104,32 @@ export async function synthesizePodcast(script, outFile, { book = '', onProgress
     }
   }));
   await mkdir(dirname(outFile), { recursive: true });
-  await writeFile(outFile, Buffer.concat(parts.map(p => stripMp3(p.audio))));
+  // 先写临时文件再转码替换，重新配音时旧音频在成功前一直可听
+  const raw = `${outFile}.raw.mp3`;
+  await writeFile(raw, Buffer.concat(parts.map(p => stripMp3(p.audio))));
+  await compressMp3(raw, outFile);
   const chars = parts.reduce((n, p) => n + p.chars, 0);
   return { file: outFile, durationMs: parts.reduce((n, p) => n + p.ms, 0), chars, cost: chars / 10000 * TTS.pricePer10k, turns: turns.length };
+}
+
+/**
+ * 用 ffmpeg 转成单声道 CBR（默认 64kbps，语音足够清晰，文件约为 128kbps 的一半），并写入准确的时长信息。
+ * 没有 ffmpeg 或转码失败时直接用原文件。PODCAST_BITRATE=0 关闭转码。
+ */
+export async function compressMp3(src, dst) {
+  const kbps = process.env.PODCAST_BITRATE ?? '64';
+  const tmp = `${dst}.tmp.mp3`;
+  if (kbps !== '0') {
+    try {
+      await promisify(execFile)('ffmpeg', ['-y', '-v', 'error', '-i', src, '-ac', '1', '-ar', '32000', '-b:a', `${kbps}k`, '-map_metadata', '-1', tmp], { timeout: 300000 });
+      await rename(tmp, dst);
+      if (src !== dst) await rm(src, { force: true });
+      return true;
+    } catch (e) {
+      await rm(tmp, { force: true });
+      console.warn(`播客转码失败，使用原始音频：${e.message.slice(0, 120)}`);
+    }
+  }
+  if (src !== dst) await rename(src, dst);
+  return false;
 }

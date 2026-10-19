@@ -1,5 +1,5 @@
 // 播客：GET 查询状态；POST 在还没有播客时触发生成（需要登录）。
-import { getBookBySlug } from '../../../lib/books.mjs';
+import { getBookBySlug, podcastUrl } from '../../../lib/books.mjs';
 import { getDb } from '../../../lib/db.mjs';
 import { enqueuePodcast } from '../../../lib/jobs.mjs';
 import { fail, json, sameOrigin } from '../../lib/http';
@@ -10,7 +10,7 @@ function status(book) {
   return {
     status: book.podcast_status,
     progress: job?.progress || '',
-    url: book.podcast_status === 'ready' ? `/media/podcast/${book.id}.mp3?v=${book.podcast_ms || 0}` : null,
+    url: podcastUrl(book),
     ms: book.podcast_ms,
     script: book.podcast_status === 'ready' && book.podcast_script ? JSON.parse(book.podcast_script) : null,
   };
