@@ -36,6 +36,8 @@ export async function findLinks(target, others, { alias = ROLES.link } = {}) {
   const links = (Array.isArray(r.data?.links) ? r.data.links : [])
     .filter(l => valid.has(l.slug) && LINK_TYPES.includes(l.type) && !seen.has(l.slug) && seen.add(l.slug))
     .slice(0, 6)
+    // 模型偶尔照搬提示词里的“目标书”，换成书名
+    .map(l => ({ ...l, why: String(l.why || '').replaceAll('目标书', `《${String(target.page.book.title).split(/[:：]/)[0]}》`) }))
     .map(l => ({ slug: l.slug, type: l.type, concept: cut(l.concept, 12), why: cut(l.why, 60), strength: Math.min(3, Math.max(1, Math.round(Number(l.strength) || 1))) }));
   return { links, cost: r.cost };
 }
