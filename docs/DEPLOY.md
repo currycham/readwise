@@ -45,6 +45,8 @@ DEPLOY_HOST=ubuntu@<服务器IP> DEPLOY_KEY=~/.ssh/<你的密钥> deploy/deploy.
 - `npm run mail-test -- 邮箱`：测试邮件配置
 - `npm run podcast-compress`：把已有播客转成 64kbps 单声道（新播客合成后自动转码，需要服务器装有 ffmpeg，`PODCAST_BITRATE` 可调）
 - `npm run podcast-tag`：给已有播客补写 AI 生成标识（ID3 标签，不重新编码；新播客转码时自动写入）
+- `npm run podcast-loudnorm`：把已有播客的响度统一到 -16 LUFS（新播客转码时自动处理，`PODCAST_LUFS` 可调，设为 0 关闭）
+- `npm run rekey-books`：重算书库去重键（只看主书名，冒号后的副标题不算），改过 `normKey` 规则后跑一次
 - `npm run douban-refresh -- [--all] [--dry]`：从豆瓣刷新评分
 
 看日志：`ssh ubuntu@<服务器IP> sudo journalctl -u readwise-web -u readwise-worker -f`（邮件还是 dev 模式时，验证码也打印在这里）。

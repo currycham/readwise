@@ -100,6 +100,8 @@ export const EVIDENCE_THRESHOLD = Number(env.EVIDENCE_THRESHOLD || 6);
 
 // 播客目标时长（分钟）。实际成稿在 15–20 分钟之间；语音合成成本与时长成正比（30 分钟约 ¥3）
 export const PODCAST_MINUTES = Number(env.PODCAST_MINUTES || 18);
+// 两位主持人的名字：A 领读人（男声），B 提问者（女声）。播客稿里互相称呼、文稿里标注说话人都用它
+export const PODCAST_HOSTS = { A: env.PODCAST_HOST_A || '咖喱', B: env.PODCAST_HOST_B || '路亚' };
 
 // 播客语音合成：腾讯云 TokenHub 上的 MiniMax 同步语音合成（单次 ≤ 1 万字符，中文每字按 2 个字符计费）
 export const TTS = {

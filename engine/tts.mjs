@@ -55,7 +55,7 @@ async function withSlot(fn) {
   try { return await fn(); } finally { active--; waiting.shift()?.(); }
 }
 
-async function speak(text, voice, book) {
+export async function speak(text, voice, book) {
   const key = process.env[TTS.keyEnv];
   if (!key) throw new Error(`缺少环境变量 ${TTS.keyEnv}`);
   let lastErr;
@@ -114,14 +114,16 @@ export async function synthesizePodcast(script, outFile, { book = '', author = '
 
 /**
  * 用 ffmpeg 转成单声道 CBR（默认 64kbps，语音足够清晰，文件约为 128kbps 的一半），并写入准确的时长信息。
- * 没有 ffmpeg 或转码失败时直接用原文件。PODCAST_BITRATE=0 关闭转码。
+ * 同时做响度标准化：语音合成出来只有约 -32 LUFS，手机外放偏小，统一到播客常用的 -16 LUFS。
+ * 没有 ffmpeg 或转码失败时直接用原文件。PODCAST_BITRATE=0 关闭转码，PODCAST_LUFS=0 关闭响度标准化。
  */
 export async function compressMp3(src, dst, tags = {}) {
   const kbps = process.env.PODCAST_BITRATE ?? '64';
   const tmp = `${dst}.tmp.mp3`;
   if (kbps !== '0') {
     try {
-      await promisify(execFile)('ffmpeg', ['-y', '-v', 'error', '-i', src, '-ac', '1', '-ar', '32000', '-b:a', `${kbps}k`, '-map_metadata', '-1', ...aigcTags(tags), tmp], { timeout: 300000 });
+      const af = await loudnormFilter(src);
+      await promisify(execFile)('ffmpeg', ['-y', '-v', 'error', '-i', src, ...(af ? ['-af', af] : []), '-ac', '1', '-ar', '32000', '-b:a', `${kbps}k`, '-map_metadata', '-1', ...aigcTags(tags), tmp], { timeout: 300000 });
       await rename(tmp, dst);
       if (src !== dst) await rm(src, { force: true });
       return true;
@@ -132,6 +134,24 @@ export async function compressMp3(src, dst, tags = {}) {
   }
   if (src !== dst) await rename(src, dst);
   return false;
+}
+
+/**
+ * 两遍法响度标准化的第二遍参数：先测出整条音频的响度，再按测量值做线性增益（不压缩动态，听感和原来一样只是变响）。
+ * 增益会让峰值超过上限时，loudnorm 会自动改用动态模式。测量失败时返回 null，不做标准化。
+ */
+export async function loudnormFilter(src) {
+  const target = Number(process.env.PODCAST_LUFS ?? -16);
+  if (!target) return null;
+  const base = `loudnorm=I=${target}:TP=-1.5:LRA=11`;
+  try {
+    const { stderr } = await promisify(execFile)('ffmpeg', ['-hide_banner', '-nostats', '-i', src, '-af', `${base}:print_format=json`, '-f', 'null', '-'], { timeout: 300000, maxBuffer: 16 << 20 });
+    const m = JSON.parse(stderr.slice(stderr.lastIndexOf('{')));
+    return `${base}:measured_I=${m.input_i}:measured_TP=${m.input_tp}:measured_LRA=${m.input_lra}:measured_thresh=${m.input_thresh}:offset=${m.target_offset}:linear=true`;
+  } catch (e) {
+    console.warn(`响度测量失败，不做标准化：${e.message.slice(0, 120)}`);
+    return null;
+  }
 }
 
 /**

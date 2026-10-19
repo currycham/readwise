@@ -30,7 +30,9 @@
     "balance-check": "node --env-file-if-exists=.env scripts/balance-check.mjs",
     "douban-refresh": "node --env-file-if-exists=.env scripts/douban-refresh.mjs",
     "podcast-compress": "node --env-file-if-exists=.env scripts/podcast-compress.mjs",
-    "podcast-tag": "node --env-file-if-exists=.env scripts/podcast-tag.mjs"
+    "podcast-tag": "node --env-file-if-exists=.env scripts/podcast-tag.mjs",
+    "podcast-loudnorm": "node --env-file-if-exists=.env scripts/podcast-loudnorm.mjs",
+    "rekey-books": "node --env-file-if-exists=.env scripts/rekey-books.mjs"
   },
   "dependencies": {
     "better-sqlite3": "12.4.1",

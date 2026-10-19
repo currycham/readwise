@@ -1,5 +1,5 @@
 // 播客：先由大模型写双人对谈稿，再交给语音合成（engine/tts.mjs）。
-import { PODCAST_MINUTES, ROLES } from '../config/models.mjs';
+import { PODCAST_HOSTS, PODCAST_MINUTES, ROLES } from '../config/models.mjs';
 import { chatJSON } from './llm.mjs';
 import { PODCAST_SYSTEM, podcastUser } from './prompts.mjs';
 
@@ -11,7 +11,7 @@ export async function podcastScript(page, { minutes = PODCAST_MINUTES, alias = R
     book: page.book.title,
     temperature: 0.8,
     messages: [
-      { role: 'system', content: PODCAST_SYSTEM.replace('{minutes}', minutes).replace('{chars}', chars).replace('{perChunk}', Math.round((chars - 600) / page.chunks.length)) },
+      { role: 'system', content: PODCAST_SYSTEM.replace('{minutes}', minutes).replace('{chars}', chars).replace('{perChunk}', Math.round((chars - 600) / page.chunks.length)).replaceAll('{hostA}', PODCAST_HOSTS.A).replaceAll('{hostB}', PODCAST_HOSTS.B) },
       { role: 'user', content: podcastUser(page) },
     ],
   });

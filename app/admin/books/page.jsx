@@ -15,7 +15,17 @@ export default async function AdminBooks({ searchParams }) {
         <thead><tr><th>书名</th><th>分类</th><th>状态</th><th>浏览</th><th>质检</th><th>模型</th><th>豆瓣</th><th>播客</th><th>反馈</th><th>首位生成</th><th>时间</th><th>操作</th></tr></thead>
         <tbody>{rows.map(b => (
           <tr key={b.id}>
-            <td><Link href={`/b/${encodeURIComponent(b.slug)}`} target="_blank">《{b.title}》</Link><br /><span className="muted small">{b.author}</span></td>
+            <td>
+              <Link href={`/b/${encodeURIComponent(b.slug)}`} target="_blank">《{b.title}》</Link><br /><span className="muted small">{b.author}</span>
+              <details className="small"><summary className="muted">改书名</summary>
+                <form method="post" action="/api/admin" className="inline-form">
+                  <input type="hidden" name="action" value="book_title" /><input type="hidden" name="id" value={b.id} />
+                  <input className="input" name="title" defaultValue={b.title} size={14} aria-label="书名" />
+                  <label className="muted" title="链接改成新书名；已经分享出去的旧链接会失效"><input type="checkbox" name="reslug" value="1" /> 同时改链接</label>
+                  <button className="btn sm">存</button>
+                </form>
+              </details>
+            </td>
             <td>
               <form method="post" action="/api/admin" className="inline-form">
                 <input type="hidden" name="action" value="book_category" /><input type="hidden" name="id" value={b.id} />

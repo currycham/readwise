@@ -601,7 +601,8 @@ $('#copy').onclick=async()=>{const t=sheet();try{await navigator.clipboard.write
 /* ---------- podcast ---------- */
 function showScript(p){
   const box=$('#podScript');box.hidden=false;
-  box.innerHTML=`<div class="label">节目文稿</div>`+p.segments.map(s=>`<h4>${esc(s.heading||'')}</h4>`+s.lines.map(l=>`<p><b>${l.speaker==='A'?'领读':'提问'}</b>${esc(l.text)}</p>`).join('')).join('');
+  const H=(SITE&&SITE.podcast&&SITE.podcast.hosts)||{A:'领读',B:'提问'};
+  box.innerHTML=`<div class="label">节目文稿</div>`+p.segments.map(s=>`<h4>${esc(s.heading||'')}</h4>`+s.lines.map(l=>`<p><b>${esc(H[l.speaker==='A'?'A':'B'])}</b>${esc(l.text)}</p>`).join('')).join('');
 }
 function showAudio(url,ms){const a=$('#podAudio');if(a.getAttribute('src')!==url)a.src=url;a.hidden=false;$('#podBtn').hidden=true;
   $('#podState').textContent=ms?`约 ${Math.round(ms/60000)} 分钟 · 本节目由 AI 生成`:'本节目由 AI 生成';podPlayer()}

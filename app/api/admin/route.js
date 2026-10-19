@@ -1,7 +1,7 @@
 // 后台操作：表单 POST，处理后跳回原页面
 import { NextResponse } from 'next/server';
 import { isValidCategory } from '../../../config/categories.mjs';
-import { updateBook } from '../../../lib/books.mjs';
+import { normKey, uniqueSlug, updateBook } from '../../../lib/books.mjs';
 import { addCredits } from '../../../lib/credits.mjs';
 import { getDb, tx } from '../../../lib/db.mjs';
 import { approveJob, rejectJob, retryJob } from '../../../lib/jobs.mjs';
@@ -16,7 +16,7 @@ export async function POST(req) {
   const f = Object.fromEntries((await req.formData()).entries());
   const id = Number(f.id);
   const db = getDb();
-  const back = req.headers.get('referer') || '/admin';
+  const back = req.headers.get('referer') || new URL('/admin', req.url).toString();
   try {
     switch (f.action) {
       case 'book_status':
@@ -42,6 +42,19 @@ export async function POST(req) {
         const us = db.prepare('SELECT id FROM users WHERE nickname = ? OR email = ? OR CAST(id AS TEXT) = ?').all(key, key.toLowerCase(), key);
         if (us.length !== 1) throw new Error(us.length ? `有 ${us.length} 个账号叫「${key}」，请填邮箱或用户 ID` : `没有找到账号「${key}」`);
         db.prepare('UPDATE books SET first_user_id = ? WHERE id = ?').run(us[0].id, id);
+        break;
+      }
+      case 'book_title': {
+        const title = String(f.title || '').replace(/[《》]/g, '').trim();
+        if (!title || [...title].length > 60) throw new Error('书名不能为空，60 字以内');
+        const b = db.prepare('SELECT slug, page_json FROM books WHERE id = ?').get(id);
+        const key = normKey(title);
+        const dup = db.prepare('SELECT title FROM books WHERE norm_key = ? AND id != ?').get(key, id);
+        if (dup) throw new Error(`书库里已有《${dup.title}》，和这个书名重复`);
+        const page = JSON.parse(b.page_json);
+        page.book.title = title;
+        // 改链接会让已经分享出去的地址失效，只在勾选时改
+        updateBook(id, { title, norm_key: key, page_json: JSON.stringify(page), ...(f.reslug === '1' ? { slug: uniqueSlug(title, id) } : {}) });
         break;
       }
       case 'book_podcast_reset':
