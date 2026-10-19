@@ -125,6 +125,12 @@ export async function buildBookPage(o) {
     }
   }
 
+  // 只剩答案位置的问题时在本地重新打乱即可，不用整本失败
+  if (errors.length && errors.every(e => e.startsWith('quiz 正确答案'))) {
+    for (let i = 0; i < 5 && errors.length; i++) errors = validatePage(shuffleQuiz(page));
+    if (!errors.length) log('重新打乱了检测题的答案位置');
+  }
+
   page.schema_version = SCHEMA_VERSION;
   // 豆瓣评分优先直接取自豆瓣；取不到再用检索资料里抽取的
   const live = await doubanLookup({ title: page.book.title || title, author: page.book.author || author }, { log });
@@ -167,7 +173,8 @@ export function shuffleQuiz(page) {
   for (let tries = 0; tries < 50; tries++) {
     targets = Array.from({ length: n }, (_, i) => i % 4);
     for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [targets[i], targets[j]] = [targets[j], targets[i]]; }
-    if (!targets.some((t, i) => i >= 2 && t === targets[i - 1] && t === targets[i - 2])) break;
+    // 和 validatePage 的规则一致：不连续 3 题相同，开头也不能是重复的短序列（如 2031 2031 2031）
+    if (!targets.some((t, i) => i >= 2 && t === targets[i - 1] && t === targets[i - 2]) && !/^(\d{2,4})\1{2,}/.test(targets.join(''))) break;
   }
   page.quiz.forEach((q, i) => {
     if (!Array.isArray(q.options) || q.options.length !== 4 || !Number.isInteger(q.answer) || !q.options[q.answer]) return;
