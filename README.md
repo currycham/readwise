@@ -4,6 +4,8 @@
 
 输入一本书的书名，Readwise 会用 AI 为它生成一份「书籍回顾」：先听一段双人播客，再限时逐块精读、闯关检测、联系自己，最后还能向“作者”提问。书库里的每一本都公开，谁都可以免费读。
 
+![Readwise 首页](docs/screenshots/home.jpg)
+
 ## 为什么做这个
 
 很多书读完就忘了。合上书的那一刻觉得收获很多，过几个月只剩一个书名和一点模糊的印象。
@@ -28,6 +30,27 @@ Readwise 想做的，就是把这两套方法变成一份可以直接用的回�
 | 检测 | 5′ | 12 道闯关题，连对有连击，答错会告诉你回看哪一块 |
 | 内化 | 10′ | 填空回忆、批判性思考、和自己的处境联系起来 |
 | 向作者提问 | 读后 | AI 以作者的视角回答你的问题（AI 模拟，非作者本人观点） |
+
+以《影响力》为例（[在线查看](https://readwise.waywise.tech/b/%E5%BD%B1%E5%93%8D%E5%8A%9B)）：
+
+<table>
+<tr>
+<td width="50%"><img src="docs/screenshots/book.jpg" alt="推荐：一句话、适合谁、读完你会"><br><sub><b>推荐</b>：一句话讲清这本书，豆瓣评分可点击核对</sub></td>
+<td width="50%"><img src="docs/screenshots/podcast.jpg" alt="双人播客"><br><sub><b>双人播客</b>：先听一遍，附完整文稿</sub></td>
+</tr>
+<tr>
+<td><img src="docs/screenshots/inspect.jpg" alt="检视：全书骨架"><br><sub><b>检视</b>：书的类型、作者要解决的问题、全书结构图</sub></td>
+<td><img src="docs/screenshots/chunks.jpg" alt="分析：知识块"><br><sub><b>分析</b>：逐块精读，核心论述、术语、论证链、例子</sub></td>
+</tr>
+<tr>
+<td><img src="docs/screenshots/quiz.jpg" alt="检测：闯关"><br><sub><b>检测</b>：12 道题一题一题闯关，答错告诉你回看哪一块</sub></td>
+<td><img src="docs/screenshots/internalize.jpg" alt="内化"><br><sub><b>内化</b>：表态、讲给朋友听、用在自己的一件事上</sub></td>
+</tr>
+<tr>
+<td><img src="docs/screenshots/ask.jpg" alt="向作者提问"><br><sub><b>向作者提问</b>：AI 模拟作者，用书里的思路聊你的处境</sub></td>
+<td align="center"><img src="docs/screenshots/mobile.jpg" width="45%" alt="手机端"><br><sub><b>手机端</b>：同一份书页，手机上也能读</sub></td>
+</tr>
+</table>
 
 书库按“这本书能帮你解决什么问题”分类，比如“总是拖延”“想不清楚做不好决定”“不会沟通表达”。按问题找书，比按图书分类找更贴近人为什么会去读一本书。
 
