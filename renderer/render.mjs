@@ -44,6 +44,10 @@ function headTags(page, { slug, siteUrl, aigcId }) {
     `<meta property="og:title" content="${esc(title)}">`,
     `<meta property="og:description" content="${esc(desc)}">`,
     `<meta name="twitter:card" content="summary">`,
+    // 书页不经过 Next 的 layout，网站图标要自己写
+    `<link rel="icon" href="/favicon.ico" sizes="any">`,
+    `<link rel="icon" href="/icon.png" type="image/png">`,
+    `<link rel="apple-touch-icon" href="/apple-icon.png">`,
   ];
   if (url) tags.push(`<link rel="canonical" href="${esc(url)}">`, `<meta property="og:url" content="${esc(url)}">`, `<meta property="og:image" content="${esc(root)}/podcast-art.png">`);
   return tags.join('\n');
