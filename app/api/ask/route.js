@@ -27,20 +27,24 @@ export async function POST(req) {
     const page = JSON.parse(book.page_json);
     const enc = new TextEncoder();
     const userId = user.id;
+    // 读者中途关掉页面时流已被取消，之后不再往里写，否则会抛 "Controller is already closed"
+    let gone = false;
     const stream = new ReadableStream({
       async start(controller) {
+        const send = s => { if (!gone) controller.enqueue(enc.encode(s)); };
         let full = '';
         try {
           await withContext({ userId, bookId: book.id }, () =>
-            askAuthor(page, msgs, { onDelta: t => { full += t; controller.enqueue(enc.encode(t)); } }));
-          if (!(await checkText(full)).ok) controller.enqueue(enc.encode('\n[[BLOCKED]]'));
+            askAuthor(page, msgs, { onDelta: t => { full += t; send(t); } }));
+          if (!(await checkText(full)).ok) send('\n[[BLOCKED]]');
         } catch (e) {
           console.error('问作者失败：', e.message);
           if (charged) addCredits(userId, charged, 'refund', `ask:${book.id}`);
-          controller.enqueue(enc.encode('\n[[ERROR]]'));
+          send('\n[[ERROR]]');
         }
-        controller.close();
+        if (!gone) controller.close();
       },
+      cancel() { gone = true; },
     });
     return new Response(stream, { headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-cache', 'x-charged-credits': String(charged) } });
   } catch (e) {
