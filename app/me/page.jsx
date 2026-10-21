@@ -34,7 +34,7 @@ export default async function Me({ searchParams }) {
     <div className="wrap page">
       {sp.welcome && (
         <div className="card stack" style={{ borderColor: 'var(--accent)' }}>
-          <h3>欢迎来到 Readwise</h3>
+          <h3>欢迎来到 ReadWise</h3>
           <p>先给自己起个昵称吧。你生成的书籍回顾会显示“首位生成者：你的昵称”。</p>
         </div>
       )}

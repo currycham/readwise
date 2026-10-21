@@ -18,7 +18,7 @@ export default async function Graph({ searchParams }) {
   return (
     <div className="graph-page">
       <div className="wrap">
-        <div className="label">Readwise · 书籍网络</div>
+        <div className="label">ReadWise · 书籍网络</div>
         <h1>书与书之间的联系</h1>
         <p className="lead muted">
           {nodes.length} 本书，{links.length} 条联系。有的书讲的是同一个问题，有的观点针锋相对，有的一本讲道理、一本讲方法。点开一本书，看它和哪些书相连、为什么相连。

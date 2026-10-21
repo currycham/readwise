@@ -163,8 +163,8 @@ export function aigcTags({ title = '', author = '', id = '' } = {}) {
   const aigc = { Label: '1', ContentProducer: process.env.AIGC_PRODUCER || new URL(process.env.SITE_URL || 'https://readwise.waywise.tech').host, ProduceID: id || title };
   return ['-id3v2_version', '3',
     '-metadata', `title=${title ? `《${title}》双人播客` : '双人播客'}`,
-    '-metadata', `artist=${author ? `Readwise · ${author}` : 'Readwise'}`,
-    '-metadata', 'album=Readwise',
+    '-metadata', `artist=${author ? `ReadWise · ${author}` : 'ReadWise'}`,
+    '-metadata', 'album=ReadWise',
     '-metadata', 'comment=本节目由 AI 生成，内容可能有误，不能替代阅读原书',
     '-metadata', `AIGC=${JSON.stringify(aigc)}`];
 }

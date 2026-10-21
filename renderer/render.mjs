@@ -18,7 +18,7 @@ export async function renderPage(page, { slug, apiBase = '', siteUrl = '', aigcI
   const data = { ...page, meta: { ...(page.meta || {}), slug: slug || page.meta?.slug || page.book.title } };
   // 防止内容里的 </script> 提前结束脚本块
   const json = JSON.stringify(data).replace(/</g, '\\u003c');
-  let html = tpl.replace('<!--TITLE-->', esc(`《${page.book.title}》书籍回顾 · Readwise`))
+  let html = tpl.replace('<!--TITLE-->', esc(`《${page.book.title}》书籍回顾 · ReadWise`))
     .replace('<!--HEAD-->', () => headTags(page, { slug: data.meta.slug, siteUrl, aigcId }))
     .replace('<!--BOOK_DATA-->', () => json);
   if (apiBase) html = html.replace('<script>\n(function(){', () => `<script>window.BOOK_API=${JSON.stringify(apiBase)};</script>\n<script>\n(function(){`);
@@ -35,12 +35,12 @@ function headTags(page, { slug, siteUrl, aigcId }) {
   const url = root && slug ? `${root}/b/${encodeURIComponent(slug)}` : '';
   let host = '';
   try { host = root ? new URL(root).host : ''; } catch {}
-  const aigc = { Label: '1', ContentProducer: process.env.AIGC_PRODUCER || host || 'Readwise', ProduceID: aigcId || slug || b.title };
+  const aigc = { Label: '1', ContentProducer: process.env.AIGC_PRODUCER || host || 'ReadWise', ProduceID: aigcId || slug || b.title };
   const tags = [
     `<meta name="description" content="${esc(desc)}">`,
     `<meta name="AIGC" content="${esc(JSON.stringify(aigc))}">`,
     `<meta property="og:type" content="article">`,
-    `<meta property="og:site_name" content="Readwise">`,
+    `<meta property="og:site_name" content="ReadWise">`,
     `<meta property="og:title" content="${esc(title)}">`,
     `<meta property="og:description" content="${esc(desc)}">`,
     `<meta name="twitter:card" content="summary">`,

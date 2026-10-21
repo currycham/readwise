@@ -1,5 +1,5 @@
 [Unit]
-Description=Readwise 后台任务（生成书页、合成播客）
+Description=ReadWise 后台任务（生成书页、合成播客）
 After=network.target
 
 [Service]

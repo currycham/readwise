@@ -1,5 +1,5 @@
 [Unit]
-Description=Readwise 网站（Next.js）
+Description=ReadWise 网站（Next.js）
 After=network.target
 
 [Service]

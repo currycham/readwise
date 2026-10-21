@@ -4,7 +4,7 @@
   "license": "MIT",
   "private": true,
   "type": "module",
-  "description": "Readwise：书籍精读回顾网站与内容引擎：检索打分、生成、质检、渲染、问作者、双人播客",
+  "description": "ReadWise：书籍精读回顾网站与内容引擎：检索打分、生成、质检、渲染、问作者、双人播客",
   "engines": {
     "node": ">=20"
   },

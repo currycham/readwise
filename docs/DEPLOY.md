@@ -21,7 +21,7 @@ DEPLOY_HOST=ubuntu@<服务器IP> DEPLOY_KEY=~/.ssh/<你的密钥> deploy/deploy.
 1. 准备一个发信邮箱，开通 SMTP：
    - **QQ 邮箱**（最简单）：设置 → 账号 → 开启"POP3/SMTP 服务"，拿到**授权码**。`SMTP_HOST=smtp.qq.com`、`SMTP_PORT=465`、`SMTP_USER=你的QQ邮箱`、`SMTP_PASS=授权码`。
    - 或者用 waywise.tech 的域名邮箱（腾讯企业邮等），发件人显示为 `noreply@waywise.tech`，更正式，也更不容易进垃圾箱。
-2. 在 `.env.production` 里填：`MAIL_PROVIDER=smtp`、上面四项、`MAIL_FROM="Readwise <发信邮箱>"`（地址要和 `SMTP_USER` 一致），以及 `ADMIN_EMAILS=你的邮箱`。
+2. 在 `.env.production` 里填：`MAIL_PROVIDER=smtp`、上面四项、`MAIL_FROM="ReadWise <发信邮箱>"`（地址要和 `SMTP_USER` 一致），以及 `ADMIN_EMAILS=你的邮箱`。
 3. 部署后测试：`cd /srv/readwise/app && sudo -u readwise npm run mail-test -- 你的邮箱`
 
 腾讯云服务器封了 25 端口，SMTP 必须用 465 或 587。

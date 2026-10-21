@@ -1,4 +1,4 @@
-# Readwise 定时任务：由 setup-server.sh 安装到 /etc/cron.d/readwise
+# ReadWise 定时任务：由 setup-server.sh 安装到 /etc/cron.d/readwise
 # 每 3 小时检查一次各家 API 余额，低于阈值发邮件；每天凌晨刷新超过 30 天的豆瓣评分、补算书籍网络
 SHELL=/bin/sh
 PATH=/usr/local/bin:/usr/bin:/bin
