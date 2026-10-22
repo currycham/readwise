@@ -236,6 +236,8 @@ footer{color:var(--muted);font-size:13px;display:flex;flex-direction:column;gap:
 .db{font-family:var(--f-mono);font-size:13px;color:var(--ok)}
 .db a{color:inherit;text-decoration-color:var(--line)}
 .report{display:flex;flex-direction:column;gap:8px;max-width:520px}
+/* 公众号文章预览：文章本身全用行内样式（公众号编辑器只认行内样式），这里只给一张白纸 */
+.wx{background:#fff;border:1px solid var(--line);border-radius:8px;padding:24px 18px;max-width:600px}
 footer a{color:var(--muted)}
 
 @media (max-width:640px){
@@ -387,8 +389,23 @@ footer a{color:var(--muted)}
       <div class="label">我的一页笔记</div>
       <div class="sheet" id="sheet"></div>
       <div class="ctrl"><button class="btn primary" id="copy">复制笔记</button><span class="readout" id="copied"></span></div>
+      <p class="how" id="shareHint"></p>
     </div>
     <button class="btn finish" data-finish="3" aria-pressed="false">完成第 4 步</button>
+  </section>
+
+  <section id="share" hidden>
+    <header>
+      <div class="label">全书回顾完成</div>
+      <div class="shead"><h2>把笔记发成一篇公众号文章</h2></div>
+      <p class="how">四步都完成了。下面这篇已经按公众号排好版：复制正文，到公众号后台新建图文，粘贴进正文，格式会保留。</p>
+    </header>
+    <div class="card" style="display:flex;flex-direction:column;gap:12px">
+      <div class="field"><div class="label">标题</div><div class="ctrl"><span id="wxTitle" style="font-family:var(--f-display);font-weight:600;font-size:18px"></span><button class="btn sm" id="wxCopyTitle">复制标题</button></div></div>
+      <p class="readout" id="wxMissing"></p>
+      <div class="wx" id="wx"></div>
+      <div class="ctrl"><button class="btn primary" id="wxCopy">复制正文（公众号格式）</button><span class="readout" id="wxState"></span></div>
+    </div>
   </section>
 
   <section id="ask">
@@ -484,6 +501,7 @@ function renderNav(){
   const lines=STEPS.map(([id,t,m],i)=>{const u=S.used[i];if(u==null)return `${t}  —     / ${m}:00`;const d=u-m*60;return `${t}  ${mmss(u).padStart(5)} / ${m}:00  ${d>0?'超时 +'+mmss(d):'节省 '+mmss(-d)}`});
   const tot=Object.values(S.used).reduce((a,b)=>a+b,0);
   $('#log').innerHTML=lines.map(esc).join('<br>')+`<br>合计  ${mmss(tot)} / 60:00`;
+  renderShare();
 }
 function tick(){
   const tot=Object.values(S.used).reduce((a,b)=>a+b,0)+(T.step!=null&&!S.fin[T.step]?stepElapsed():0);
@@ -503,7 +521,7 @@ document.addEventListener('click',e=>{
     if(S.fin[i]){S.fin[i]=false;save();renderNav();return}
     S.fin[i]=true;if(T.step===i){S.used[i]=stepElapsed();T={step:null,elapsed:0,running:false,last:0};$('#clkBtn').disabled=true}
     save();renderNav();tick();
-    const nx=document.getElementById(STEPS[i+1]?STEPS[i+1][0]:'ask');nx&&nx.scrollIntoView({block:'start'});return}
+    const nx=document.getElementById(STEPS[i+1]?STEPS[i+1][0]:allDone()?'share':'ask');nx&&nx.scrollIntoView({block:'start'});return}
   const b=e.target.closest('[data-show]');
   if(b){const t=document.getElementById(b.dataset.show);t.hidden=!t.hidden;b.textContent=t.hidden?(b.dataset.lbl||'显示参考'):'收起'}
 });
@@ -599,7 +617,7 @@ async function qanswer(i,j){
       qfb=i;
     }
   }catch(e){qerr='没有提交成功：'+e.message}
-  qbusy=false;renderQuiz();
+  qbusy=false;renderQuiz();renderShare();
 }
 let qtimer=null;
 function qtick(){clearInterval(qtimer);if(qlock<=0)return;qtimer=setInterval(()=>{qlock--;if(qlock<=0)clearInterval(qtimer);if(!qstats().n)renderQuiz()},1000)}
@@ -614,8 +632,58 @@ $('#stance').addEventListener('click',e=>{const b=e.target.closest('[data-st]');
 function sheet(){
   const v=k=>(S.w[k]||'').trim()||'（还没写）';
   const txt=`《${bk.title}》我的一页笔记\n\n【一句话主旨】\n${(S.unity||'').trim()||'（还没写）'}\n\n【有道理吗】${S.st!=null?ST[S.st]:''}\n${v('w1')}\n\n【讲给朋友听】\n${v('w2')}\n\n【用在一件事上】\n${v('w3')}`;
-  $('#sheet').textContent=txt;return txt}
+  $('#sheet').textContent=txt;renderShare();return txt}
 ['w1','w2','w3'].forEach(id=>{const el=$('#'+id);el.value=S.w[id]||'';el.addEventListener('input',()=>{S.w[id]=el.value;save();sheet()})});
+/* ---------- 公众号文章：四步都完成后，把一页笔记排成能直接粘贴进公众号编辑器的文章 ---------- */
+// 公众号编辑器会丢掉 class 和 <style>，所以全用行内样式，颜色固定用浅色（公众号深色模式会自己转换）
+const allDone=()=>STEPS.every((_,i)=>S.fin[i]);
+function wxArticle(){
+  const ink='#2b2b2b',muted='#888',accent='#0D6866';
+  const ps=t=>t.split(/\n+/).map(x=>x.trim()).filter(Boolean).map(x=>`<p style="margin:0 0 12px;">${esc(x)}</p>`).join('');
+  let n=0;
+  const h=t=>`<p style="margin:32px 0 14px;padding-bottom:6px;border-bottom:1px solid #D3E8E5;font-size:17px;font-weight:bold;color:${accent};"><span style="margin-right:8px;">${String(++n).padStart(2,'0')}</span>${esc(t)}</p>`;
+  const unity=(S.unity||'').trim(),w=k=>(S.w[k]||'').trim(),miss=[];
+  let body='';
+  if(unity)body+=h('一句话说清这本书')+ps(unity);else miss.push('一句话主旨');
+  if(S.st!=null||w('w1')){
+    body+=h('有道理吗？我的判断')+`<p style="margin:0 0 12px;">作者的核心主张是“${esc(B.internalize.claim)}”。${S.st!=null?`我的态度：<span style="padding:1px 8px;border-radius:4px;background:#F8EBD6;color:#B26E15;font-weight:bold;">${ST[S.st]}</span>`:''}</p>`+ps(w('w1'));
+  }
+  if(S.st==null)miss.push('表态');if(!w('w1'))miss.push('表态理由');
+  if(w('w2'))body+=h('讲给朋友听')+ps(w('w2'));else miss.push('讲给朋友听');
+  if(w('w3'))body+=h('用在我自己的一件事上')+ps(w('w3'));else miss.push('用在一件事上');
+  // 读书记录：60 分钟用时和闯关成绩
+  const tot=Object.values(S.used).reduce((a,b)=>a+b,0),st=qstats(),c=QS&&QS.completion;
+  const quiz=st.n===QZ.length?`${st.ok} / ${QZ.length}`:c?`${c.score} / ${c.total}`:'';
+  const rec=[tot>0&&`实际用时 ${Math.max(1,Math.round(tot/60))} 分钟`,quiz&&`闯关检测答对 ${quiz} 题`].filter(Boolean).join('，');
+  const db=bk.douban&&bk.douban.rating?` · 豆瓣 ${Number(bk.douban.rating).toFixed(1)}`:'';
+  const link=(document.querySelector('link[rel=canonical]')||{}).href||(/^https?:$/.test(location.protocol)?location.origin+location.pathname:'');
+  const html=`<section style="font-size:16px;line-height:1.8;color:${ink};letter-spacing:0.5px;">
+<section style="margin:0 0 20px;padding:14px 16px;background:#EEF5F4;border-left:4px solid ${accent};border-radius:4px;"><p style="margin:0;font-size:18px;font-weight:bold;">《${esc(bk.title)}》</p><p style="margin:4px 0 0;font-size:14px;color:${muted};">${esc(bk.author)} 著${db}</p></section>
+<p style="margin:0 0 12px;">我按《如何阅读一本书》的方法，用 60 分钟把这本书精读了一遍：检视、分析、检测、批判与内化。${rec?rec+'。':''}下面是读完后写给自己的一页笔记。</p>
+<section style="margin:24px 0;padding:16px 20px;text-align:center;color:${accent};font-size:17px;font-weight:bold;line-height:1.7;border-top:1px solid #D3E8E5;border-bottom:1px solid #D3E8E5;">${esc(B.motto.text)}<p style="margin:6px 0 0;font-size:12px;font-weight:normal;color:${muted};">${B.motto.source==='quote'?'原书语句':'本书主旨提炼（AI 生成）'}</p></section>
+${body}
+<p style="margin:40px 0 0;font-size:13px;line-height:1.7;color:${muted};text-align:center;">笔记是我自己写的；书籍回顾页由 ReadWise 用 AI 生成，仅供参考<br>读书方法来自《如何阅读一本书》和《学习之道》${link?`<br>${esc(link.replace(/^https?:\/\//,''))}`:''}</p>
+</section>`;
+  return {title:`读完《${bk.title}》，我的一页笔记`,html,miss};
+}
+function renderShare(){
+  const done=allDone(),left=STEPS.filter((_,i)=>!S.fin[i]).map(s=>s[1]);
+  $('#shareHint').innerHTML=done?'四步都完成了，<a href="#share">把这页笔记发成公众号文章 →</a>':`完成全部四步后（还差：${left.join('、')}），这页笔记可以一键排成公众号文章。`;
+  $('#share').hidden=!done;if(!done)return;
+  const a=wxArticle();
+  $('#wxTitle').textContent=a.title;$('#wx').innerHTML=a.html;
+  $('#wxMissing').textContent=a.miss.length?`还没写：${a.miss.join('、')}。写了会自动出现在文章里。`:'';
+}
+// 优先以富文本写入剪贴板；不支持时选中预览再复制，粘贴进公众号编辑器同样保留样式
+async function copyRich(el){
+  try{await navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([el.innerHTML],{type:'text/html'}),'text/plain':new Blob([el.innerText],{type:'text/plain'})})]);return true}catch(e){}
+  const r=document.createRange();r.selectNodeContents(el);const s=getSelection();s.removeAllRanges();s.addRange(r);
+  let ok=false;try{ok=document.execCommand('copy')}catch(e){}
+  if(ok)s.removeAllRanges();return ok;
+}
+$('#wxCopy').onclick=async()=>{$('#wxState').textContent=await copyRich($('#wx'))?'已复制。到公众号后台新建图文，在正文里粘贴':'已选中，请按 ⌘C / Ctrl+C 复制'};
+$('#wxCopyTitle').onclick=async()=>{try{await navigator.clipboard.writeText($('#wxTitle').textContent);$('#wxState').textContent='标题已复制'}catch(e){$('#wxState').textContent='复制失败，请手动选中标题'}};
+
 $('#copy').onclick=async()=>{const t=sheet();try{await navigator.clipboard.writeText(t);$('#copied').textContent='已复制'}catch(e){const r=document.createRange();r.selectNodeContents($('#sheet'));const s=getSelection();s.removeAllRanges();s.addRange(r);$('#copied').textContent='已选中，请按 ⌘C / Ctrl+C 复制'}};
 
 /* ---------- 接着读哪一本（书籍网络） ---------- */
