@@ -656,13 +656,14 @@ function wxArticle(){
   const quiz=st.n===QZ.length?`${st.ok} / ${QZ.length}`:c?`${c.score} / ${c.total}`:'';
   const rec=[tot>0&&`实际用时 ${Math.max(1,Math.round(tot/60))} 分钟`,quiz&&`闯关检测答对 ${quiz} 题`].filter(Boolean).join('，');
   const db=bk.douban&&bk.douban.rating?` · 豆瓣 ${Number(bk.douban.rating).toFixed(1)}`:'';
-  const link=(document.querySelector('link[rel=canonical]')||{}).href||(/^https?:$/.test(location.protocol)?location.origin+location.pathname:'');
+  let link=(document.querySelector('link[rel=canonical]')||{}).href||(/^https?:$/.test(location.protocol)?location.origin+location.pathname:'');
+  try{link=decodeURI(link)}catch(e){}  // 书名在网址里是 %E8… 编码，文章里显示成中文
   const html=`<section style="font-size:16px;line-height:1.8;color:${ink};letter-spacing:0.5px;">
 <section style="margin:0 0 20px;padding:14px 16px;background:#EEF5F4;border-left:4px solid ${accent};border-radius:4px;"><p style="margin:0;font-size:18px;font-weight:bold;">《${esc(bk.title)}》</p><p style="margin:4px 0 0;font-size:14px;color:${muted};">${esc(bk.author)} 著${db}</p></section>
-<p style="margin:0 0 12px;">我按《如何阅读一本书》的方法，用 60 分钟把这本书精读了一遍：检视、分析、检测、批判与内化。${rec?rec+'。':''}下面是读完后写给自己的一页笔记。</p>
+<p style="margin:0 0 12px;">我按《如何阅读一本书》的方法把这本书精读了一遍：检视、分析、检测、批判与内化，计划 60 分钟。${rec?rec+'。':''}下面是读完后写给自己的一页笔记。</p>
 <section style="margin:24px 0;padding:16px 20px;text-align:center;color:${accent};font-size:17px;font-weight:bold;line-height:1.7;border-top:1px solid #D3E8E5;border-bottom:1px solid #D3E8E5;">${esc(B.motto.text)}<p style="margin:6px 0 0;font-size:12px;font-weight:normal;color:${muted};">${B.motto.source==='quote'?'原书语句':'本书主旨提炼（AI 生成）'}</p></section>
 ${body}
-<p style="margin:40px 0 0;font-size:13px;line-height:1.7;color:${muted};text-align:center;">笔记是我自己写的；书籍回顾页由 ReadWise 用 AI 生成，仅供参考<br>读书方法来自《如何阅读一本书》和《学习之道》${link?`<br>${esc(link.replace(/^https?:\/\//,''))}`:''}</p>
+<p style="margin:40px 0 0;font-size:13px;line-height:1.7;color:${muted};text-align:center;">笔记是我自己写的；书籍回顾页由 ReadWise 用 AI 生成，仅供参考<br>读书方法来自《如何阅读一本书》和《学习之道》${link?`<br><span style="word-break:break-all;">${esc(link.replace(/^https?:\/\//,''))}</span>`:''}</p>
 </section>`;
   return {title:`读完《${bk.title}》，我的一页笔记`,html,miss};
 }
