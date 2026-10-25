@@ -8,7 +8,7 @@ import PlanCards from './components/PlanCards';
 import BookCard from './components/BookCard';
 import SearchBox from './components/SearchBox';
 import { getUser } from './lib/session';
-import { REPO_URL } from './lib/site';
+import { REPO_URL, SHOW_PRICING } from './lib/site';
 
 export const dynamic = 'force-dynamic';
 
@@ -152,12 +152,14 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="sec">
-        <div className="wrap">
-          <div className="sec-head"><h2>价格</h2><Link href="/pricing" className="small">详细说明 →</Link></div>
-          <PlanCards />
-        </div>
-      </section>
+      {SHOW_PRICING && (
+        <section className="sec">
+          <div className="wrap">
+            <div className="sec-head"><h2>价格</h2><Link href="/pricing" className="small">详细说明 →</Link></div>
+            <PlanCards />
+          </div>
+        </section>
+      )}
 
       {REPO_URL && (
         <section className="sec">

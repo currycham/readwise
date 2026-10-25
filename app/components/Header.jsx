@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { userLevel } from '../../lib/rewards.mjs';
 import { getUser } from '../lib/session';
+import { SHOW_PRICING } from '../lib/site';
 
 export default async function Header() {
   const user = await getUser();
@@ -12,7 +13,7 @@ export default async function Header() {
           <Link href="/library">书库</Link>
           <Link href="/graph"><span className="hide-sm">书籍</span>网络</Link>
           <Link href="/rank">排行榜</Link>
-          <Link href="/pricing" className="hide-sm">价格</Link>
+          {SHOW_PRICING && <Link href="/pricing" className="hide-sm">价格</Link>}
         </nav>
         <div className="who">
           {user ? (

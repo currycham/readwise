@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { leaderboard, myRank, userLevel } from '../../lib/rewards.mjs';
 import EarnRules from '../components/EarnRules';
 import { getUser } from '../lib/session';
+import { SHOW_PRICING } from '../lib/site';
 
 export const metadata = { title: '排行榜' };
 export const dynamic = 'force-dynamic';
@@ -16,7 +17,7 @@ export default async function Rank({ searchParams }) {
     <div className="wrap page narrow">
       <div className="stack">
         <h1>排行榜</h1>
-        <p className="muted">按读书获得的积分排名：读完一本、生成新书、你生成的书被别人读完，都会加分。充值的积分不计入。点昵称可以看 TA 生成过的书。</p>
+        <p className="muted">按读书获得的积分排名：读完一本、生成新书、你生成的书被别人读完，都会加分。{SHOW_PRICING && '充值的积分不计入。'}点昵称可以看 TA 生成过的书。</p>
         <div className="tabs">
           <Link href="/rank" className={period === 'week' ? 'on' : ''}>本周</Link>
           <Link href="/rank?p=all" className={period === 'all' ? 'on' : ''}>总榜</Link>

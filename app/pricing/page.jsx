@@ -1,10 +1,13 @@
 import { CREDITS_PER_YUAN, PACKS, PRICES } from '../../config/plans.mjs';
 import EarnRules from '../components/EarnRules';
 import PlanCards from '../components/PlanCards';
+import { notFound } from 'next/navigation';
+import { SHOW_PRICING } from '../lib/site';
 
 export const metadata = { title: '价格' };
 
 export default function Pricing() {
+  if (!SHOW_PRICING) notFound();
   return (
     <div className="wrap page">
       <div className="stack">
