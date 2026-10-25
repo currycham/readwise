@@ -22,7 +22,7 @@ export default function BookGraph({ nodes: rawNodes, links: rawLinks, colors, in
   const byId = useMemo(() => {
     const deg = new Map();
     rawLinks.forEach(l => { deg.set(l.a, (deg.get(l.a) || 0) + 1); deg.set(l.b, (deg.get(l.b) || 0) + 1); });
-    return new Map(rawNodes.map(n => [n.id, { ...n, deg: deg.get(n.id) || 0, color: colors[n.top] || '#9FB3C8', r: 2.2 + 0.9 * Math.sqrt(deg.get(n.id) || 0) }]));
+    return new Map(rawNodes.map(n => [n.id, { ...n, deg: deg.get(n.id) || 0, color: colors[n.top] || '#A9BDB9', r: 2.2 + 0.9 * Math.sqrt(deg.get(n.id) || 0) }]));
   }, [rawNodes, rawLinks, colors]);
   const neighbors = useMemo(() => {
     const m = new Map([...byId.keys()].map(id => [id, []]));
@@ -97,8 +97,8 @@ export default function BookGraph({ nodes: rawNodes, links: rawLinks, colors, in
       const w = () => wrap.clientWidth, h = () => wrap.clientHeight;
       graph = new ForceGraph3D(el, { controlType: 'orbit', extraRenderers: [new CSS2DRenderer()] })
         .width(w()).height(h())
-        // 开了后期处理后背景色会再做一次 sRGB 编码（#02040b 会变成深蓝），这里给近似线性值，最终显示接近 #02040b
-        .backgroundColor('#000102')
+        // 开了后期处理后背景色会再做一次 sRGB 编码（会变亮），这里给近似线性值，最终显示接近墨绿夜色 #081314
+        .backgroundColor('#010202')
         .showNavInfo(false)
         .nodeThreeObject(nodeObj)
         .nodeLabel(() => '')
@@ -122,7 +122,7 @@ export default function BookGraph({ nodes: rawNodes, links: rawLinks, colors, in
       graph.d3Force('cluster', cluster);
 
       const scene = graph.scene(), camera = graph.camera(), controls = graph.controls();
-      scene.fog = new THREE.FogExp2(0x000102, 0.0011);
+      scene.fog = new THREE.FogExp2(0x010202, 0.0011);
 
       // 辉光：节点、连线和粒子都发光，背景保持深色
       const bloom = new UnrealBloomPass(new THREE.Vector2(w(), h()), 0.85, 0.35, 0.3); // 阈值太低会把星点和暗部一起提亮，背景发灰
@@ -139,8 +139,8 @@ export default function BookGraph({ nodes: rawNodes, links: rawLinks, colors, in
         const p = new THREE.Points(geo, new THREE.PointsMaterial({ color, size, sizeAttenuation: true, transparent: true, opacity, depthWrite: false, fog: false }));
         scene.add(p); return p;
       };
-      const far = starField(2600, 900, 1900, 1.6, 0xa9bfff, 0.7);
-      const dust = starField(900, 40, 420, 0.7, 0x6f8ad6, 0.4);
+      const far = starField(2600, 900, 1900, 1.6, 0xe8e2cf, 0.6);
+      const dust = starField(900, 40, 420, 0.7, 0x5c9e96, 0.4);
 
       controls.autoRotate = !reduce; controls.autoRotateSpeed = 0.45;
       controls.enableDamping = true; controls.dampingFactor = 0.08;

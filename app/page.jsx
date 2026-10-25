@@ -126,11 +126,11 @@ export default async function Home() {
           <div className="wrap">
             <Link href="/graph" className="graph-teaser">
               <svg viewBox="0 0 200 120" aria-hidden="true">
-                <g stroke="#7AA2F7" strokeOpacity=".55" strokeWidth="1.2" fill="none">
-                  <path d="M30 80Q60 40 95 52" /><path d="M95 52Q130 30 168 44" stroke="#F6C453" /><path d="M95 52Q110 85 140 92" stroke="#4FD1C5" />
-                  <path d="M30 80Q80 100 140 92" stroke="#FF7A6B" /><path d="M168 44Q160 75 140 92" stroke="#C792EA" /><path d="M60 22Q70 40 95 52" />
+                <g stroke="#6CC4B8" strokeOpacity=".55" strokeWidth="1.2" fill="none">
+                  <path d="M30 80Q60 40 95 52" /><path d="M95 52Q130 30 168 44" stroke="#E3A452" /><path d="M95 52Q110 85 140 92" stroke="#5CC4B4" />
+                  <path d="M30 80Q80 100 140 92" stroke="#E8826F" /><path d="M168 44Q160 75 140 92" stroke="#B59BD8" /><path d="M60 22Q70 40 95 52" />
                 </g>
-                {[[30, 80, '#F78FB3', 6], [95, 52, '#F6C453', 9], [168, 44, '#7AA2F7', 7], [140, 92, '#4FD1C5', 7], [60, 22, '#C792EA', 5]].map(([x, y, c, r]) => (
+                {[[30, 80, '#D98BA6', 6], [95, 52, '#E3A452', 9], [168, 44, '#7FB2D9', 7], [140, 92, '#5CC4B4', 7], [60, 22, '#B59BD8', 5]].map(([x, y, c, r]) => (
                   <circle key={x} cx={x} cy={y} r={r} fill={c} style={{ filter: `drop-shadow(0 0 6px ${c})` }} />
                 ))}
               </svg>

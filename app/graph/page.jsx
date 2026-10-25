@@ -39,7 +39,7 @@ export default async function Graph({ searchParams }) {
               return (
                 <li key={`${l.a}-${l.b}`}>
                   <Link href={`/b/${encodeURIComponent(a.slug)}`}>《{a.title}》</Link>
-                  <span className="g-type" style={{ color: TYPE_COLORS[l.type], borderColor: TYPE_COLORS[l.type] }}>{l.type}</span>
+                  <span className="g-type" style={{ color: `color-mix(in srgb, ${TYPE_COLORS[l.type]} 55%, var(--ink))`, borderColor: TYPE_COLORS[l.type] }}>{l.type}</span>
                   <Link href={`/b/${encodeURIComponent(b.slug)}`}>《{b.title}》</Link>
                   {l.concept && <> · {l.concept}</>}：{l.why}
                 </li>
